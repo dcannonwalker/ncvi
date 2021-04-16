@@ -1,4 +1,4 @@
-#' Non-conjugate variation inference
+#' Non-conjugate variational inference
 #'
 #' General form of wrapper function for a
 #' variational inference algorithm that may include
