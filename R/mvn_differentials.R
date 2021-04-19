@@ -1,6 +1,6 @@
 ## Differentials for multivariate normal distribution.
 
-#' Vec inverse of the differential with respect to vec of covariance
+#' Vec inverse of the differential with respect to vec of mvn covariance
 #'
 #' @param data List of observed or known variables.
 #'   If `d_likelihood()` requires only a subset of `data` param
@@ -35,7 +35,7 @@ d_mvn_cov_poisson <- function(data, pars) {
   t(C) %*% diag(exp(A)) %*% C
 }
 
-#'
+#' Transpose of the differential w.r.t. mvn mean
 #' @param data List of observed or known variables, including 'C', 'y'.
 #'   If `d_likelihood()` requires only a subset of `data` param
 #'   given to `ncvi()`, `data` should be only this subset.

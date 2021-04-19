@@ -2,16 +2,24 @@
 % Please edit documentation in R/ncvi.R
 \name{ncvi}
 \alias{ncvi}
-\title{Non-conjugate variation inference}
+\title{Non-conjugate variational inference}
 \usage{
-ncvi(data, init, differentials, update_phi, update_theta, elbo, options)
+ncvi(
+  data,
+  init,
+  differentials,
+  update_phi,
+  update_theta,
+  elbo,
+  options = list(max_iter = 100, elbo_delta = 0.001, verbose = T)
+)
 }
 \arguments{
 \item{data}{List of observed or known variables used by the
 differentials or update functions.}
 
 \item{init}{List of initial values for unknown variables
-updated by the algorithm.}
+updated by the algorithm. Should have 'phi' and 'theta'.}
 
 \item{differentials}{List of functions for differentials used in
 non-conjugate updates of 'phi' parameters.}
