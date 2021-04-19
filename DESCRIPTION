@@ -7,12 +7,14 @@ Authors@R:
            role = c("aut", "cre"),
            email = "david.cannon.walker@gmail.com",
            comment = c(ORCID = "0000-0001-5077-2525"))
-Description: Perform approximate inference for non-conjugate Bayesian models using variational methods. 
-License: `use_mit_license()`, `use_gpl3_license()` or friends to
-    pick a license
+Description: Perform approximate inference for non-conjugate 
+    Bayesian models using variational methods. 
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 URL: https://github.com/dcannonwalker/ncvi/
 BugReports: https://github.com/dcannonwalker/ncvi/issues
+Imports: 
+  MASS
