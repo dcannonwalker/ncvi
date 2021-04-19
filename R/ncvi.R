@@ -6,7 +6,7 @@
 #' @param data List of observed or known variables used by the
 #' differentials or update functions.
 #' @param init List of initial values for unknown variables
-#' updated by the algorithm.
+#' updated by the algorithm. Should have 'phi' and 'theta'.
 #' @param differentials List of functions for differentials used in
 #' non-conjugate updates of 'phi' parameters.
 #' @param update_phi Function to carry out non-conjugate updates of
@@ -19,19 +19,24 @@
 #' change in ELBO to terminate the algorithm.
 #' @export
 
-ncvi <- function(data, init, differentials,
-                  update_phi, update_theta,
-                  elbo, options){
+ncvi <- function(data, init,
+                 differentials,
+                 update_phi,
+                 update_theta,
+                 elbo,
+                 options = list(max_iter = 100,
+                                elbo_delta = 0.001,
+                                verbose = T)) {
   L = elbo(data, init)
   pars = init
   iter = 0
   delta = options$elbo_delta + 1
-  while(delta > options$elbo_delta){
+  while (delta > options$elbo_delta) {
     pars$phi <- update_phi(data, pars, differentials)
     pars$theta <- update_theta(data, pars)
     delta <- abs(L - (L <- elbo(data,pars)))
     iter <- iter + 1
-    print(c(L, iter))
+    if (verbose == T) print(c(L, iter))
   }
-  return(pars)
+  pars
 }

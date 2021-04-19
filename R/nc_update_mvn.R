@@ -10,10 +10,10 @@
 #' 'mu' and 'Sigma'.
 #' @export
 
-nc_update_mvn <- function(data, pars, Sigma, mu,  differentials){
+nc_update_mvn <- function(data, pars, Sigma, mu,  differentials) {
   Sigma <- MASS::ginv(
     -2*differential_Sigma(data, pars)
     )
   mu <- mu + Sigma%*%differentials$mu(data, pars)
-  return(list(mu = mu, Sigma = Sigma))
+  list(mu = mu, Sigma = Sigma)
 }
