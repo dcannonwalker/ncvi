@@ -5,20 +5,17 @@
 \title{Non-conjugate update for the parameters of
 multivariate normal distribution.}
 \usage{
-nc_update_mvn(data, pars, Sigma, mu, differentials)
+nc_update_mvn(data, pars, differentials)
 }
 \arguments{
 \item{data}{List of observed and known variables passed down from the
-ncvi wrapper function.}
+\code{fit_ncvi()} wrapper function}
 
-\item{pars}{List of unknown variables passed down from ncvi function.}
-
-\item{Sigma}{Current variational covariance matrix for the MVN.}
-
-\item{mu}{Current variational mean vector for the MVN.}
+\item{pars}{List of unknown variables,
+including \code{phi$mu}}
 
 \item{differentials}{List of differentials functions, should have
-'mu' and 'Sigma'.}
+'mu' and 'Sigma'}
 }
 \description{
 Non-conjugate update for the parameters of

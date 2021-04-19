@@ -9,11 +9,11 @@ d_mvn_cov(data, pars, d_likelihood)
 \arguments{
 \item{data}{List of observed or known variables.
 If \code{d_likelihood()} requires only a subset of \code{data} param
-given to \code{ncvi()}, \code{data} should be only this subset.}
+given to \code{fit_ncvi()}, \code{data} should be only this subset.}
 
 \item{pars}{List of parameters, including \code{theta$Tau}.
 If \code{d_likelihood()} requires only a subset of the \code{pars} param
-given to \code{ncvi()}, \code{pars} should be only this subset.}
+given to \code{fit_ncvi()}, \code{pars} should be only this subset.}
 
 \item{d_likelihood}{Function to provide the contribution of the
 data likelihood to the differential. Should take params \code{data}

@@ -1,0 +1,93 @@
+---
+title: "my-vignette"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{my-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(ncvi)
+```
+
+### Example 1
+
+Simulate data:
+```{r ex1sim}
+set.seed(277811)
+N <- 100
+P <-  2
+sig2 <- 9
+
+beta <- mvtnorm::rmvnorm(1, sigma = diag(rep(sig2, P)))
+
+X <- cbind(1, kronecker(diag(1, P),rep(1, N/P))[, 2:P])
+
+H <- diag(P)
+
+eta <- X %*% t(beta)
+
+y <- rpois(N, lambda = exp(eta))
+
+```
+
+Construct args for `fit_ncvi()`:
+```{r ex1args}
+data = list(y = y, C = X, H = H)
+
+init = list(phi = list(mu = rep(0, P),
+                       Sigma = diag(nrow = P)),
+            theta = list(r = 1 / sig2,
+                         Tau = H * 1 / sig2,
+                         M = rep(0, P)))
+
+differentials <- list(
+  Sigma = function(data, pars) {
+    d_mvn_cov(data, pars, d_mvn_cov_poisson)
+  },
+  mu = function(data, pars) {
+    d_mvn_mean(data, pars, d_mvn_mean_poisson)
+  }
+)
+
+update_phi <- nc_update_mvn
+
+update_theta <- function(data, pars) pars$theta
+
+elbo <- function(data, pars){
+  y <- data$y
+  C <- data$C
+  mu <- pars$phi$mu
+  Sigma <- pars$phi$Sigma
+  A <- c(C %*% mu + 0.5 * diag(C %*% Sigma %*% t(C)))
+  sig2 <- 1 / pars$theta$r
+
+  # returns:
+  y %*% C %*% mu - sum(exp(A)) -
+  (sum(mu^2) + sum(diag(Sigma))) / (2 * sig2) +
+  0.5 * log(det(Sigma))
+}
+
+```
+
+Fit the model:
+```{r ex1fit}
+fit_ncvi(data, init,
+         update_phi = update_phi,
+         update_theta = update_theta,
+         elbo = elbo,
+         differentials = differentials)
+
+
+beta
+```
+
+

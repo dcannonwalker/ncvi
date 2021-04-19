@@ -19,7 +19,7 @@
 #' change in ELBO to terminate the algorithm.
 #' @export
 
-ncvi <- function(data, init,
+fit_ncvi <- function(data, init,
                  differentials,
                  update_phi,
                  update_theta,
