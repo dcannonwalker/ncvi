@@ -7,17 +7,17 @@
 d_mvn_cov(data, pars, d_likelihood)
 }
 \arguments{
-\item{data}{List of observed or known variables.
-If \code{d_likelihood()} requires only a subset of \code{data} param
-given to \code{fit_ncvi()}, \code{data} should be only this subset.}
+\item{data}{List of observed or known variables;
+if \code{d_likelihood()} requires only a subset of \code{data} param
+given to \code{fit_ncvi()}, \code{data} should be only this subset}
 
-\item{pars}{List of parameters, including \code{theta$Tau}.
-If \code{d_likelihood()} requires only a subset of the \code{pars} param
-given to \code{fit_ncvi()}, \code{pars} should be only this subset.}
+\item{pars}{List of parameters, including \code{theta$Tau};
+if \code{d_likelihood()} requires only a subset of the \code{pars} param
+given to \code{fit_ncvi()}, \code{pars} should be only this subset}
 
 \item{d_likelihood}{Function to provide the contribution of the
-data likelihood to the differential. Should take params \code{data}
-and \code{pars} as given to this function.}
+data likelihood to the differential; should take params \code{data}
+and \code{pars} as given to this function}
 }
 \description{
 Vec inverse of the differential with respect to vec of mvn covariance

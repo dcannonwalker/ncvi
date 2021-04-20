@@ -20,7 +20,7 @@ library(ncvi)
 
 This is a work-in-progress tutorial for using `ncvi` with a hierarchical Bayesian model
 
-### Set-up
+### Example 1
 
 The model:
 $$
@@ -38,3 +38,5 @@ $$
 $\Sigma_0 = \text{diag}(v)$ where $\{1/v_i\} \subset \{r_i\}$ and $\{r_i\}$ is a set of precision parameters. 
 
 Simulate data
+
+### Example 2: random effects 

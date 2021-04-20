@@ -7,34 +7,34 @@
 fit_ncvi(
   data,
   init,
-  differentials,
   update_phi,
   update_theta,
   elbo,
-  options = list(max_iter = 100, elbo_delta = 0.001, verbose = T)
+  options = list(max_iter = 100, elbo_delta = 1e-04, verbose = T),
+  ...
 )
 }
 \arguments{
 \item{data}{List of observed or known variables used by the
-differentials or update functions.}
+differentials or update functions}
 
 \item{init}{List of initial values for unknown variables
-updated by the algorithm. Should have 'phi' and 'theta'.}
-
-\item{differentials}{List of functions for differentials used in
-non-conjugate updates of 'phi' parameters.}
+updated by the algorithm; should have 'phi' and 'theta'}
 
 \item{update_phi}{Function to carry out non-conjugate updates of
-'phi' parameter. Should take args 'data', 'pars', and 'differentials'.}
+'phi' parameter}
 
 \item{update_theta}{Function to carry out conjugate updates of 'theta'
-parameter. Should take args 'data' and 'pars'.}
+parameter}
 
-\item{elbo}{Function to calculate the ELBO for the model.}
+\item{elbo}{Function to calculate the ELBO for the model}
 
 \item{options}{List of options.
 Should include positive real 'elbo_delta', the threshold
-change in ELBO to terminate the algorithm.}
+change in ELBO to terminate the algorithm}
+
+\item{...}{Additional arguments to be passed to \code{update_phi()},
+e.g. \code{differentials}}
 }
 \description{
 General form of wrapper function for a
