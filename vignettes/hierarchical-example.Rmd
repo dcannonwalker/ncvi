@@ -1,0 +1,40 @@
+---
+title: "hierarchical-example"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{hierarchical-example}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(ncvi)
+```
+
+This is a work-in-progress tutorial for using `ncvi` with a hierarchical Bayesian model
+
+### Set-up
+
+The model:
+$$
+\begin{align}
+    \begin{split}
+        y_g &\sim \text{Pois}(\text{exp}[X\beta_g]) \\
+        \beta_g &\sim \text{MVN}(\mu_0, \Sigma_0) \\
+        \mu_0 &\sim \text{MVN}(0, \sigma^2\text{I}_p) \\
+        r_i &\overset{ind}{\sim} \text{Gamma}(a_i, b_i) \\
+        \tau = \frac{1}{\sigma^2} &\sim \text{Gamma}(a_\tau,b_\tau)
+    \end{split}
+\end{align}
+$$
+
+$\Sigma_0 = \text{diag}(v)$ where $\{1/v_i\} \subset \{r_i\}$ and $\{r_i\}$ is a set of precision parameters. 
+
+Simulate data
