@@ -1,0 +1,10 @@
+To do bucket
+
+fit_ncvi
+## To do: consider change to `update_pars()` function in place of
+## the two individual update functions.
+
+conjugate_update_mvn
+## To do: generalize
+## To do: better/shorter function names?
+## To do: move explanatory comments out of the function body
