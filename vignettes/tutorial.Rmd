@@ -1,0 +1,181 @@
+---
+title: "tutorial"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{tutorial}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(ncvi)
+```
+
+This is a work-in-progress tutorial for `ncvi`. 
+
+### Example 1
+
+**To do**
+
+1. Stan comparison
+    *
+1. inference example
+
+Simulate data:
+```{r ex1sim}
+set.seed(111111)
+N <- 100
+P <-  2
+sig2 <- 3
+
+beta <- mvtnorm::rmvnorm(1, sigma = diag(rep(sig2, P)))
+
+X <- cbind(1, kronecker(diag(1, P),rep(1, N/P))[, 2:P])
+
+H <- diag(P)
+
+eta <- X %*% t(beta)
+
+y <- rpois(N, lambda = exp(eta))
+
+beta
+
+```
+
+I'm going to approximate the posterior for $\beta$ under the the following model:
+$$
+\begin{align}
+  \begin{split}
+    y &\sim \text{Pois}(\text{exp}[X\beta]) \\
+    \beta &\sim \text{MVN}(0,\sigma^2\text{I}_p)
+  \end{split}
+\end{align}
+$$
+The approximation assumes the posterior for $\beta$ is MVN. The variational algorithm finds 
+the MVN distribution that minimizes the KL-divergence to the true posterior. The algorithm requires:
+
+1. `data`, a list with
+    * `y`, the observations
+    * `C` = [X,Z], the fixed and random effects design for y
+    * `H`, a matrix s.t. the prior precision for $\beta$ = `diag(H %*% r)`,
+    where r is a vector of the precision parameters
+1. `init`, a list
+    * `init$phi` is a list of starting values for the mvn variational distribution parameters (more generally, any distributions that require non-conjugate updates)
+    * `init$theta` is a list of starting values for all other parameters (that have conjugate updates)
+1. update functions
+    * `update_phi()` updates the mvn variational distribution
+    * `update_theta()` updates the conjugate distributions
+1. `differentials`, a list of functions to be passed to `update_phi()`
+    * `differentials$mu()` calculates the differential wrt the mean of the mvn distribution (technically, the transpose of this differential) 
+    * `differentials$Sigma()` calculates the differential wrt the vec(variance) (technically, inverse vec of the transpose of this differential)
+1. `elbo()`, a function to calculate $\text{E}[\text{ln}~(p(y,\phi,\theta)/q(\phi,\theta))]$
+1. `options`, a list that can be left to default or can have
+    * `max_iter`, the maximum number of iterations allowed (default 100)
+    * `elbo_delta`, the threshold change in `elbo()` to terminate
+    * `verbose`, logical to print or not the current iter and elbo
+
+I've included in the `ncvi` package functions for the differentials of $\text{E}_{-q(\beta)}~\text{ln}p(y,\theta, \phi)$ wrt the mean and vec(variance) of $q(\beta)$ for any model with MVN prior on $\beta$. These functions, `d_mvn_cov(), d_mvn_mean()`, take as arguments functions for the contribution to the differential from $\text{E}~\text{ln}p(y|\beta)$.
+I've written these functions for Poisson distributed data, `d_mvn_cov_poisson(), d_mvn_mean_poisson()`. 
+
+Construct args for `fit_ncvi()`:
+```{r ex1args}
+data = list(y = y, C = X, H = H)
+
+init = list(phi = list(mu = rep(5, P),
+                       Sigma = diag(nrow = P)),
+            theta = list(r = 1 / sig2,
+                         Tau = H * 1 / sig2,
+                         M = rep(0, P)))
+
+differentials <- list(
+  Sigma = function(data, pars) {
+    d_mvn_cov(data, pars, d_mvn_cov_poisson)
+  },
+  mu = function(data, pars) {
+    d_mvn_mean(data, pars, d_mvn_mean_poisson)
+  }
+)
+
+update_phi <- nc_update_mvn
+
+update_theta <- function(data, pars) pars$theta
+
+elbo <- function(data, pars){
+  y <- data$y
+  C <- data$C
+  mu <- pars$phi$mu
+  Sigma <- pars$phi$Sigma
+  A <- c(C %*% mu + 0.5 * diag(C %*% Sigma %*% t(C)))
+  sig2 <- 1 / pars$theta$r
+
+  # returns:
+  y %*% C %*% mu - sum(exp(A)) -
+  (sum(mu^2) + sum(diag(Sigma))) / (2 * sig2) +
+  0.5 * log(det(Sigma))
+}
+
+options = list(max_iter = 1,
+               elbo_delta = 0.0001,
+               verbose = T)
+```
+
+Fit the model:
+```{r ex1fit}
+
+fit <- fit_ncvi(data, init,
+                update_phi = update_phi,
+                update_theta = update_theta,
+                elbo = elbo,
+                differentials = differentials)
+fit$phi$mu
+beta
+```
+
+The `fit_ncvi()` function stops on an error for some data, for some initial values. Below is an example, using the same data as above:
+
+```{r ex1error1}
+
+init = list(phi = list(mu = rep(0, P),
+                       Sigma = diag(nrow = P)),
+            theta = list(r = 1 / sig2,
+                         Tau = H * 1 / sig2,
+                         M = rep(0, P)))
+pars <- init
+
+pars$phi <- nc_update_mvn(data, init, differentials)
+
+differentials$Sigma(data, pars)
+
+d_mvn_cov(data, pars, d_mvn_cov_poisson)
+
+d_mvn_cov_poisson(data, pars)
+
+test_fxn <- function(data, pars) {
+  C <- data$C
+  mu <- pars$phi$mu
+  Sigma <- pars$phi$Sigma
+  print(mu)
+}
+
+test_fxn(data, pars)
+
+tryCatch({
+  fit_ncvi(data, init,
+         update_phi = update_phi,
+         update_theta = update_theta,
+         elbo = elbo,
+         differentials = differentials)
+  },
+  error = function(err) {
+    print(paste("error:", err))
+    })
+```
+
+An initial exploration suggests that early values of `mu` are very large, and cause the exponent in `A` to evaluate to `Inf`. I've encountered numerical issues related to very large values appearing in other ways also. I don't yet have a general method for circumventing these problems. 
