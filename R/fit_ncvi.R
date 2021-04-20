@@ -1,3 +1,6 @@
+## To do: consider change to `update_pars()` function in place of
+## the two individual update functions.
+
 #' Non-conjugate variational inference
 #'
 #' General form of wrapper function for a
@@ -41,7 +44,7 @@ fit_ncvi <- function(data, init,
 
     pars$phi <- update_phi(data, pars, args$differentials)
 
-    pars$theta <- update_theta(data, pars)
+    pars$theta <- update_theta(data, pars, args$priors)
 
     delta <- abs(L - (L <- elbo(data,pars)))
 
@@ -52,4 +55,5 @@ fit_ncvi <- function(data, init,
   }
 
   pars
+
 }

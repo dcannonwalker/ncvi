@@ -1,6 +1,7 @@
 ## conjugate updates for mvn hierarchical mean
 ## To do: generalize
 ## To do: better/shorter function names?
+## To do: move explanatory comments out of the function body
 
 #' Conjugate update for the parameters of multivariate normal
 #' distribution for the hierarchical mean of
@@ -9,11 +10,13 @@
 #' @param pars List with `phi` and `theta`
 #' @export
 conjugate_update_mvn_hierarchical_mean <- function(pars) {
-  # update the variance
+
   phi <- pars$phi
   Tau <- pars$theta$Tau
   t <- pars$theta$t
   P <- nrow(Tau)
+
+  # update the variance
 
   R <- MASS::ginv(
 
@@ -35,5 +38,9 @@ conjugate_update_mvn_hierarchical_mean <- function(pars) {
   sum_mu_i <- Reduce("+", collection_mu_i)
 
   M <- R %*% sum(Tau %*% sum_mu_i)
+
+  # return R and M
+
+  list(R = R, M = M)
 
 }
