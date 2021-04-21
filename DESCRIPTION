@@ -17,7 +17,8 @@ RoxygenNote: 7.1.1
 URL: https://github.com/dcannonwalker/ncvi/
 BugReports: https://github.com/dcannonwalker/ncvi/issues
 Imports: 
-  MASS
+  MASS,
+  mvtnorm
 Suggests: 
     knitr,
     rmarkdown,

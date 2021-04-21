@@ -7,11 +7,9 @@
 elbo_extra <- function(data, pars) {
 
   phi <- pars$phi
-
   r <- pars$theta$r
-
   t <- pars$theta$t
-
+  M <- pars$theta$M
   G <- data$G
 
   collection_mu_i <- lapply(phi, function(x) x$mu)
@@ -60,7 +58,7 @@ elbo_hierarchical <- function(data, pars) {
   L <- elbo_extra(data, pars)
 
   for (i in seq(1,G)) {
-    L <- L + elboi(data = list(y = y[[i]], C = C),
+    L <- L + elbo_i(data = list(y = y[[i]], C = C),
                    pars = list(phi = phi[[i]], theta = theta))
   }
 

@@ -13,6 +13,6 @@ nc_update_mvn <- function(data, pars, differentials) {
     -2 * differentials$Sigma(data, pars)
     )
   pars$Sigma <- Sigma
-  mu <- pars$phi$mu + Sigma %*% differentials$mu(data, pars)
+  mu <- drop(pars$phi$mu + Sigma %*% differentials$mu(data, pars))
   list(mu = mu, Sigma = Sigma)
 }

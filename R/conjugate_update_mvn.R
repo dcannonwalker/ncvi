@@ -37,7 +37,7 @@ conjugate_update_mvn_hierarchical_mean <- function(pars) {
 
   sum_mu_i <- Reduce("+", collection_mu_i)
 
-  M <- R %*% sum(Tau %*% sum_mu_i)
+  M <- drop(R %*% (Tau %*% sum_mu_i))
 
   # return R and M
 
