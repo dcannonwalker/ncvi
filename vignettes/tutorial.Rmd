@@ -105,7 +105,7 @@ differentials <- list(
 
 update_phi <- nc_update_mvn
 
-update_theta <- function(data, pars) pars$theta
+update_theta <- function(data, pars, priors) pars$theta
 
 elbo <- function(data, pars){
   y <- data$y

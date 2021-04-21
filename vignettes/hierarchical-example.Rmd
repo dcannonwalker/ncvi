@@ -161,7 +161,7 @@ differentials <- list(
   }
 )
 
-elbo <- elbo_extra
+elbo <- elbo_hierarchical
 ```
 
 ### Example 2: random effects 

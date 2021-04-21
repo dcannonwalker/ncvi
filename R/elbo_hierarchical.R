@@ -2,7 +2,8 @@
 
 #' Contribution to ELBO of terms not included in group-wise ELBO
 #'
-#' @inheritParams elbo
+#' @inheritParams elbo_hierarchical
+#' @export
 elbo_extra <- function(data, pars) {
 
   phi <- pars$phi
@@ -22,7 +23,8 @@ elbo_extra <- function(data, pars) {
 
 #' Contribution to EBLO from a single group
 #'
-#' @inheritParams elbo
+#' @inheritParams elbo_hierarchical
+#' @export
 elbo_i <- function(data, pars) {
 
   y <- data$y
@@ -43,8 +45,9 @@ elbo_i <- function(data, pars) {
 
 #' Complete ELBO function
 #'
-#' @param data
-#' @param pars
+#' @param data List of `y, C, G`
+#' @param pars List of `phi, theta`
+#' @export
 elbo_hierarchical <- function(data, pars) {
 
   phi <- pars$phi
