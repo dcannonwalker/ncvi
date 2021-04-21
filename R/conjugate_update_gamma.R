@@ -1,15 +1,17 @@
 ## updates for Gamma-distributed precision parameters
 
-#' Conjugate update for the parameters of Gamma distribution
-#' with ind. mvn child nodes that have a mvn prior mean
+#' Conjugate update for the parameters of ind. Gamma distributions
+#' with ind. mvn child nodes that have a mvn prior mean; prior precision
+#' of child nodes
 #'
 #' @param pars List with `phi, theta`
 #' @param priors List with `a, b`
-#' @param data List with `S`
+#' @param data List with `S, H`
 #' @export
-conjugate_update_gamma <- function(data, pars, priors) {
+conjugate_update_gamma_precision_matrix <- function(data, pars, priors) {
 
   S <- data$S
+  H <- data$H
   phi <- pars$phi
   M <- S %*% pars$theta$M
   R <- S %*% pars$theta$R
@@ -30,6 +32,18 @@ conjugate_update_gamma <- function(data, pars, priors) {
     sum(mu^2 + sum + M^2 + (mu * M) + diag(R))
     )
 
-  # return a,b
-  list(a = a, b = b)
+  Tau <- diag(H %*% (a / b))
+
+  # return a, b, Tau
+  list(a = a, b = b, Tau = Tau)
+
 }
+
+conjugate_update_gamma_precision <- function() {
+
+
+
+  list(t = t)
+
+}
+

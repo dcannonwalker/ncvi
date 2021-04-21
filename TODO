@@ -1,4 +1,8 @@
-To do bucket
+To do bucket:
+
+## Think about message-passing implementation, graph model structure
+
+Particular function:
 
 fit_ncvi
 ## To do: consider change to `update_pars()` function in place of

@@ -35,8 +35,133 @@ $$
 \end{align}
 $$
 
-$\Sigma_0 = \text{diag}(v)$ where $\{1/v_i\} \subset \{r_i\}$ and $\{r_i\}$ is a set of precision parameters. 
+$\Sigma_0 = \text{diag}(v)$ where $\{1/v_i\} \subset \{r_i\}$ and $\{r_i\}$ is a set of precision parameters. For this example, I'll take the simplest case that $\Sigma_0 = \sigma^2_\beta \text{I}_p$.
 
-Simulate data
+Simulate data:
+
+```{r ex1sim}
+at <- 1
+bt <- 3
+ar <- 1
+br <- 3
+P <- 2
+G <- 10
+N <- 10
+
+t <- rgamma(1, shape = at, rate = bt)
+
+r <- rgamma(1, shape = ar, rate = br)
+
+mu0 <- mvtnorm::rmvnorm(1, mean = rep(0, P), sigma = diag(1/t, P))
+
+beta <- mvtnorm::rmvnorm(G, mean = mu0, sigma = diag(1/r, P))
+
+X <- cbind(1, kronecker(diag(1, P),rep(1, N/P))[, 2:P])
+
+H <- diag(P)
+
+eta_mat <- apply(beta, 1, function(b) X%*%b)
+
+eta <- c(apply(beta, 1, function(b) X%*%b))
+
+y <- rpois(N*G, lambda = exp(eta))
+
+eta
+y
+```
+
+Construct arguments to `fit_ncvi()`:
+
+```{r }
+y_list <- list()
+
+for (i in seq(1, G)) {
+  
+  y_list[[i]] <- y[((i - 1) * (N / G) + 1):(i * (N / G))]
+  
+}
+
+data <- list(
+  y = y_list,
+  C = X,
+  H = H,
+  G = G
+)
+
+init_phi <- list()
+
+for (i in seq(1, G)) {
+  
+  init_phi[[i]] <- list(mu = rep(0, P), Sigma = diag(P))
+  
+}
+
+init_theta <- list(
+  M = rep(0, P),
+  R = diag(P),
+  Tau = diag(r, P),
+  t = t,
+  r = r
+)
+
+init <- list(
+  phi = init_phi,
+  theta = init_theta
+)
+
+priors <- list(
+  a = ar,
+  b = br,
+  at = at,
+  bt = bt
+)
+
+update_phi <- function(data, pars, differentials) {
+  
+  phi <- pars$phi
+  theta <- pars$theta
+  y <- data$y
+  C <- data$C
+  G <- data$G
+  
+  for (i in seq(1, G)) {
+    
+    phi[[i]] <- nc_update_mvn(data = list(y = y[[i]], C = C), 
+                              pars = list(phi = phi[[i]], theta = theta),
+                              differentials = differentials)
+    
+  }
+  
+  # return phi
+  phi
+  
+}
+
+update_theta <- function(data, pars, priors) {
+  
+  theta <- pars$theta
+  
+  pars_mu0 <- conjugate_update_mvn_hierarchical_mean(pars)
+  
+  theta$M <- pars_mu0$M
+  
+  theta$R <- pars_mu0$R
+  
+  # return theta
+  theta
+  
+}
+
+differentials <- list(
+  Sigma = function(data, pars) {
+    d_mvn_cov(data, pars, d_mvn_cov_poisson)
+  },
+  mu = function(data, pars) {
+    d_mvn_mean(data, pars, d_mvn_mean_poisson)
+  }
+)
+
+elbo <- elbo_extra
+```
 
 ### Example 2: random effects 
