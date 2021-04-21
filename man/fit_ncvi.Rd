@@ -7,8 +7,7 @@
 fit_ncvi(
   data,
   init,
-  update_phi,
-  update_theta,
+  update_pars,
   elbo,
   options = list(max_iter = 100, elbo_delta = 1e-04, verbose = T),
   ...
@@ -21,11 +20,8 @@ differentials or update functions}
 \item{init}{List of initial values for unknown variables
 updated by the algorithm; should have 'phi' and 'theta'}
 
-\item{update_phi}{Function to carry out non-conjugate updates of
-'phi' parameter}
-
-\item{update_theta}{Function to carry out conjugate updates of 'theta'
-parameter}
+\item{update_pars}{Function to carry out the update to
+\code{pars} at each step}
 
 \item{elbo}{Function to calculate the ELBO for the model}
 
@@ -33,7 +29,7 @@ parameter}
 Should include positive real 'elbo_delta', the threshold
 change in ELBO to terminate the algorithm}
 
-\item{...}{Additional arguments to be passed to \code{update_phi()},
+\item{...}{Additional arguments to be passed to \code{update_pars()},
 e.g. \code{differentials}}
 }
 \description{

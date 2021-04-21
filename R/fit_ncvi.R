@@ -11,21 +11,18 @@
 #'   differentials or update functions
 #' @param init List of initial values for unknown variables
 #'   updated by the algorithm; should have 'phi' and 'theta'
-#' @param update_phi Function to carry out non-conjugate updates of
-#'   'phi' parameter
-#' @param update_theta Function to carry out conjugate updates of 'theta'
-#'   parameter
+#' @param update_pars Function to carry out the update to
+#'   `pars` at each step
 #' @param elbo Function to calculate the ELBO for the model
 #' @param options List of options.
 #'   Should include positive real 'elbo_delta', the threshold
 #'   change in ELBO to terminate the algorithm
-#' @param ... Additional arguments to be passed to `update_phi()`,
+#' @param ... Additional arguments to be passed to `update_pars()`,
 #'   e.g. `differentials`
 #' @export
 
 fit_ncvi <- function(data, init,
-                 update_phi,
-                 update_theta,
+                 update_pars,
                  elbo,
                  options = list(max_iter = 100,
                                 elbo_delta = 0.0001,
@@ -42,9 +39,7 @@ fit_ncvi <- function(data, init,
   while (iter < options$max_iter &&
          delta > options$elbo_delta) {
 
-    pars$phi <- update_phi(data, pars, args$differentials)
-
-    pars$theta <- update_theta(data, pars, args$priors)
+    pars <- update_pars(data, pars, args)
 
     delta <- abs(L - (L <- elbo(data,pars)))
 

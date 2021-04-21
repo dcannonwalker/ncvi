@@ -38,7 +38,7 @@ update_SigmaB <- function(data, pars, differential_SigmaB){
 #' @export
 update_EB <- function(data, pars, differential_EB){
   return(
-    pars$phi$EB + pars$phi$SigmaB%*%differential_EB(data, pars)
+    c(pars$phi$EB + pars$phi$SigmaB%*%differential_EB(data, pars))
   )
 }
 
@@ -176,7 +176,7 @@ elbo_ex4 <- function(data, pars){
 #' Update using the legacy format/differentials for ex4
 #'
 #' @export
-update_phi <- function(data, pars, differentials){
+update_phi_ex4 <- function(data, pars, differentials){
   SigmaB <- pars$phi$SigmaB
   EB <- pars$phi$EB
   theta <- pars$theta
@@ -208,7 +208,7 @@ update_phi <- function(data, pars, differentials){
 #' Legacy format update for `theta` in ex4
 #'
 #' @export
-update_theta <- function(data, pars){
+update_theta_ex4 <- function(data, pars){
   theta <- pars$theta
   theta$EM <- update_EM(data, pars)
   return(theta)

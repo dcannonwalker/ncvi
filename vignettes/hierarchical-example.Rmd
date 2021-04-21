@@ -176,18 +176,18 @@ options = list(max_iter = 1000,
 Fit the model: 
 
 ```{r ex1fit}
-tryCatch({
-  fit_ncvi(data, init,
-           update_phi = update_phi_pkg, 
-           update_theta = update_theta_pkg,
-           elbo = elbo_hierarchical,
-           options = options,
-           differentials = differentials,
-           priors = priors)
-  },
- error = function(err) {
-    print(paste("error:", err))
-    })
+# tryCatch({
+#   fit_ncvi(data, init,
+#            update_phi = update_phi_pkg, 
+#            update_theta = update_theta_pkg,
+#            elbo = elbo_hierarchical,
+#            options = options,
+#            differentials = differentials,
+#            priors = priors)
+#   },
+#  error = function(err) {
+#     print(paste("error:", err))
+#     })
 ```
 
 ```{r testing}

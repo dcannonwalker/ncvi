@@ -105,7 +105,11 @@ differentials <- list(
 
 update_phi <- nc_update_mvn
 
-update_theta <- function(data, pars, priors) pars$theta
+update_pars <- function(data, pars, args) {
+  
+  update_phi(data, pars, args$differentials)
+
+}
 
 elbo <- function(data, pars){
   y <- data$y
@@ -129,53 +133,45 @@ options = list(max_iter = 1,
 Fit the model:
 ```{r ex1fit}
 
-fit <- fit_ncvi(data, init,
-                update_phi = update_phi,
-                update_theta = update_theta,
-                elbo = elbo,
-                differentials = differentials)
-fit$phi$mu
-beta
 ```
 
 The `fit_ncvi()` function stops on an error for some data, for some initial values. Below is an example, using the same data as above:
 
 ```{r ex1error1}
-
-init = list(phi = list(mu = rep(0, P),
-                       Sigma = diag(nrow = P)),
-            theta = list(r = 1 / sig2,
-                         Tau = H * 1 / sig2,
-                         M = rep(0, P)))
-pars <- init
-
-pars$phi <- nc_update_mvn(data, init, differentials)
-
-differentials$Sigma(data, pars)
-
-d_mvn_cov(data, pars, d_mvn_cov_poisson)
-
-d_mvn_cov_poisson(data, pars)
-
-test_fxn <- function(data, pars) {
-  C <- data$C
-  mu <- pars$phi$mu
-  Sigma <- pars$phi$Sigma
-  print(mu)
-}
-
-test_fxn(data, pars)
-
-tryCatch({
-  fit_ncvi(data, init,
-         update_phi = update_phi,
-         update_theta = update_theta,
-         elbo = elbo,
-         differentials = differentials)
-  },
-  error = function(err) {
-    print(paste("error:", err))
-    })
+# 
+# init = list(phi = list(mu = rep(0, P),
+#                        Sigma = diag(nrow = P)),
+#             theta = list(r = 1 / sig2,
+#                          Tau = H * 1 / sig2,
+#                          M = rep(0, P)))
+# pars <- init
+# 
+# pars$phi <- nc_update_mvn(data, init, differentials)
+# 
+# differentials$Sigma(data, pars)
+# 
+# d_mvn_cov(data, pars, d_mvn_cov_poisson)
+# 
+# d_mvn_cov_poisson(data, pars)
+# 
+# test_fxn <- function(data, pars) {
+#   C <- data$C
+#   mu <- pars$phi$mu
+#   Sigma <- pars$phi$Sigma
+#   print(mu)
+# }
+# 
+# test_fxn(data, pars)
+# 
+# tryCatch({
+#   fit_ncvi(data, init,
+#          update_pars = update_pars,
+#          elbo = elbo,
+#          differentials = differentials)
+#   },
+#   error = function(err) {
+#     print(paste("error:", err))
+#     })
 ```
 
-An initial exploration suggests that early values of `mu` are very large, and cause the exponent in `A` to evaluate to `Inf`. I've encountered numerical issues related to very large values appearing in other ways also. I don't yet have a general method for circumventing these problems. 
+An initial exploration suggests that early values of `mu` are very large, and cause the exponent in `A` to evaluate to `Inf`. I've encountered numerical issues related to very large values appearing in other ways also. I don't yet have a general method for circumventing these problems.
