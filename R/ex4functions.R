@@ -214,6 +214,14 @@ update_theta_ex4 <- function(data, pars){
   return(theta)
 }
 
+#' Wrapper for legacy format updates to pass to `fit_ncvi()`
+#'
+#' @export
+update_pars_ex4 <- function(data, pars, args) {
+  pars$phi <- update_phi_ex4(data, pars, args$differentials)
+  pars$theta <- update_theta_ex4(data, pars)
+  pars
+}
 # unknown sig2, sig2B
 # update_theta <- function(data, pars){
 #   theta <- pars$theta

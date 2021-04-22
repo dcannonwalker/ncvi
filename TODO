@@ -1,6 +1,8 @@
 To do bucket:
 
 ## Think about message-passing implementation, graph model structure
+## Think about: what's the best way to organize the params that functions
+##  in this package will use, esp. data, pars, priors,...
 
 Particular function:
 

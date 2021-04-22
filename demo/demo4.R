@@ -1,7 +1,9 @@
 library(devtools)
 load_all()
-N <- 10
-P <- 2
+
+N <- 12 # observations per group
+P <- 2 # number of treatment conditions
+U <- 6 # number of experimental units / subjects
 C <- cbind(1, kronecker(diag(1, P),rep(1, N / P))[, 2:P])
 M <- c(1, 1)
 t <- 1 / 3
@@ -23,3 +25,9 @@ differential_EB(data1, pars1)
 
 d_mvn_cov(data2, pars2, d_mvn_cov_poisson)
 differential_SigmaB(data1, pars1)
+
+## constructing random effects model
+X <- cbind(1, kronecker(diag(1, P),rep(1, N / P))[, 2:P])
+Z <- kronecker(diag(U), rep(1, times = N/U))
+
+
