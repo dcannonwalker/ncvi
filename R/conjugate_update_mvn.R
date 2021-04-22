@@ -9,12 +9,13 @@
 #'
 #' @param pars List with `phi` and `theta`
 #' @export
-conjugate_update_mvn_hierarchical_mean <- function(pars) {
+conjugate_update_mvn_hierarchical_mean <- function(data, pars) {
 
   phi <- pars$phi
   Tau <- pars$theta$Tau
   t <- pars$theta$t
   P <- nrow(Tau)
+  G <- data$G
 
   # update the variance
 
@@ -27,7 +28,7 @@ conjugate_update_mvn_hierarchical_mean <- function(pars) {
     # of mu_0,
     # i.e. E(1/sig2)
 
-    Tau + (t * diag(P))
+    G*Tau + (t * diag(P))
 
   )
   # update the mean

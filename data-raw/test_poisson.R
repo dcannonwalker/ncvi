@@ -35,6 +35,12 @@ test_poisson <- list(data_legacy = data_legacy,
                      pars_new = pars_new,
                      differentials_legacy = differentials_legacy,
                      differentials_new = differentials_new)
-usethis::use_data(test_poisson, overwrite = TRUE)
+usethis::use_data(data_legacy,
+                  pars_legacy,
+                  data_new,
+                  pars_new,
+                  test_poisson,
+                  differentials_legacy,
+                  differentials_new, overwrite = TRUE)
 
 

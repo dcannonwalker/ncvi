@@ -54,7 +54,7 @@ update_pars <- function(data, pars, args) {
 
 }
 
-elbo <- function(data, pars){
+elbo_simple_poisson <- function(data, pars){
   y <- data$y
   C <- data$C
   mu <- pars$phi$mu
@@ -76,13 +76,33 @@ update_pars <- function(data, pars, args) {
 
 }
 
+## compare `nc_update_mvn()` to `update_EB()` and `update_SigmaB()`
+data("data_legacy")
+data("data_new")
+data("pars_legacy")
+data("pars_new")
+data("differentials_legacy")
+data("differentials_new")
+nc_update_mvn(data_new, pars_new, differentials_new)
+
+update_SigmaB(data = data_legacy,
+              pars = pars_legacy,
+              differential_SigmaB = differentials_legacy$SigmaB)
+
+pars_legacy$phi$SigmaB <- update_SigmaB(data = data_legacy,
+                                        pars = pars_legacy,
+                                        differential_SigmaB = differentials_legacy$SigmaB)
+update_EB(data = data_legacy,
+          pars = pars_legacy,
+          differential_EB = differentials_legacy$EB)
+
 options = list(max_iter = 10,
                elbo_delta = 0.0001,
                verbose = T)
 
 fit_ncvi(data, init,
          update_pars = update_pars,
-         elbo = elbo,
+         elbo = elbo_simple_poisson,
          options = options,
          differentials = differentials)
 beta

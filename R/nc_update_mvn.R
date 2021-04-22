@@ -12,7 +12,7 @@ nc_update_mvn <- function(data, pars, differentials) {
   Sigma <- MASS::ginv(
     -2 * differentials$Sigma(data, pars)
     )
-  pars$Sigma <- Sigma
-  mu <- drop(pars$phi$mu + Sigma %*% differentials$mu(data, pars))
+  pars$phi$Sigma <- Sigma
+  mu <- c(pars$phi$mu + Sigma %*% differentials$mu(data, pars))
   list(mu = mu, Sigma = Sigma)
 }

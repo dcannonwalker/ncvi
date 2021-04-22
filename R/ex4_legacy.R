@@ -118,7 +118,7 @@ update_VM <- function(data, pars){
 #'
 #' @inheritParams differential_SigmaB
 #' @export
-elbo_i_ex4 <- function(data, pars){
+elbo_i_legacy <- function(data, pars){
   y <- data$y
   X <- data$X
   EB <- pars$EB
@@ -137,7 +137,7 @@ elbo_i_ex4 <- function(data, pars){
 #' @param data The entire `data` arg
 #' @param pars The entire `pars` arg
 #' @export
-elbo_extra_ex4 <- function(data, pars){
+elbo_extra_legacy <- function(data, pars){
   s <- data$etc$s
   t <- data$etc$t
   EM <- pars$theta$EM
@@ -151,10 +151,10 @@ elbo_extra_ex4 <- function(data, pars){
 
 #' Entire ELBO function for ex4
 #'
-#' @inheritParams elbo_extra_ex4
+#' @inheritParams elbo_extra_legacy
 #' @export
-elbo_ex4 <- function(data, pars){
-  L <- elbo_extra_ex4(data, pars)
+elbo_legacy <- function(data, pars){
+  L <- elbo_extra_legacy(data, pars)
   SigmaB <- pars$phi$SigmaB
   EB <- pars$phi$EB
   theta <- pars$theta
@@ -163,7 +163,7 @@ elbo_ex4 <- function(data, pars){
   y <- data$y
   G <- data$etc$G
   for (i in seq(1,G)) {
-    L <- L + elbo_i_ex4(data = list(y = y[[i]], X = X, t = t),
+    L <- L + elbo_i_legacy(data = list(y = y[[i]], X = X, t = t),
                    pars = list(EB = EB[[i]], SigmaB = SigmaB[[i]]))
   }
   return(L)
@@ -176,7 +176,7 @@ elbo_ex4 <- function(data, pars){
 #' Update using the legacy format/differentials for ex4
 #'
 #' @export
-update_phi_ex4 <- function(data, pars, differentials){
+update_phi_legacy <- function(data, pars, differentials){
   SigmaB <- pars$phi$SigmaB
   EB <- pars$phi$EB
   theta <- pars$theta
@@ -208,7 +208,7 @@ update_phi_ex4 <- function(data, pars, differentials){
 #' Legacy format update for `theta` in ex4
 #'
 #' @export
-update_theta_ex4 <- function(data, pars){
+update_theta_legacy <- function(data, pars){
   theta <- pars$theta
   theta$EM <- update_EM(data, pars)
   return(theta)
@@ -217,9 +217,9 @@ update_theta_ex4 <- function(data, pars){
 #' Wrapper for legacy format updates to pass to `fit_ncvi()`
 #'
 #' @export
-update_pars_ex4 <- function(data, pars, args) {
-  pars$phi <- update_phi_ex4(data, pars, args$differentials)
-  pars$theta <- update_theta_ex4(data, pars)
+update_pars_legacy <- function(data, pars, args) {
+  pars$phi <- update_phi_legacy(data, pars, args$differentials)
+  pars$theta <- update_theta_legacy(data, pars)
   pars
 }
 # unknown sig2, sig2B

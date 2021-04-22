@@ -42,7 +42,7 @@ for (i in seq(1, G)) {
 
 }
 
-data_legacy <- list(y = y_list,
+data_hierarchical_legacy <- list(y = y_list,
                 etc = list(X = X,
                            t = t,
                            s = s,
@@ -58,14 +58,14 @@ for (i in seq(1,G)) {
   EBinit[[i]] <- rep(0,P)
 }
 
-init_legacy <- list(phi = list(EB = EBinit,
+init_hierarchical_legacy <- list(phi = list(EB = EBinit,
                            SigmaB = SigmaBinit),
                 theta = list(EM = rep(0,P)))
 
 differentials_legacy <- list(SigmaB = differential_SigmaB,
                              EB = differential_EB)
 
-data_new <- list(
+data_hierarchical_new <- list(
   y = y_list,
   C = X,
   H = diag(P),
@@ -94,12 +94,12 @@ init_theta <- list(
   r = t
 )
 
-init_new <- list(
+init_hierarchical_new <- list(
   phi = init_phi,
   theta = init_theta
 )
 
-priors_new <- list(
+priors_hierarchical_new <- list(
   a = ar,
   b = br,
   at = at,
@@ -116,12 +116,14 @@ differentials_new <- list(
 )
 
 
-test_hierarchical_poisson <- list(data_legacy = data_legacy,
-                                  init_legacy = init_legacy,
-                                  differentials_legacy = differentials_legacy,
-                                  data_new = data_new,
-                                  init_new = init_new,
-                                  priors_new = priors_new,
-                                  differentials_new = differentials_new)
+test_hierarchical_poisson <- list(data_hierarchical_legacy = data_legacy,
+                                  init_hierarchical_legacy = init_legacy,
+                                  data_hierarchical_new = data_new,
+                                  init_hierarchical_new = init_new,
+                                  priors_hierarchical_new = priors_new)
 
-usethis::use_data(test_hierarchical_poisson, overwrite = TRUE)
+usethis::use_data(data_hierarchical_legacy,
+                  init_hierarchical_legacy,
+                  data_hierarchical_new,
+                  init_hierarchical_new,
+                  priors_hierarchical_new, overwrite = TRUE)
