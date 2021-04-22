@@ -71,3 +71,5 @@ d_mvn_mean_poisson <- function(data, pars) {
 
   t(C) %*% (y - exp(A))
 }
+
+
