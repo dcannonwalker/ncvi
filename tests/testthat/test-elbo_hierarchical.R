@@ -8,7 +8,11 @@ data("init_hierarchical_legacy")
 data("init_hierarchical_new")
 
 test_that("elbo_hierarchical agrees with older elbo_ex4", {
-  expect_equal(elbo_ex4(data_hierarchical_legacy, init_hierarchical_legacy),
+  expect_equal(elbo_legacy(data_hierarchical_legacy, init_hierarchical_legacy),
                elbo_hierarchical(data_hierarchical_new, init_hierarchical_new))
 })
-
+elbo_hierarchical(data_hierarchical_new,
+                  init_hierarchical_new)
+elbo_legacy(data_hierarchical_legacy, init_hierarchical_legacy)
+elbo_hierarchical
+elbo_extra

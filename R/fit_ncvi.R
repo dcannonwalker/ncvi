@@ -49,6 +49,8 @@ fit_ncvi <- function(data, init,
 
   }
 
-  pars
+  list(pars = pars,
+       data = data,
+       elbo = L)
 
 }

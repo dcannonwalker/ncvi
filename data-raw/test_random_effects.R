@@ -35,8 +35,8 @@ truepars_REH <- list(mu0 = mu0,
 C <- cbind(X, Z)
 phi <- cbind(beta, u)
 eta <- c(apply(phi, 1, function(p) C %*% p))
-
-y <- vector2list(y = rpois(N * G, lambda = exp(eta)),
+y_vector = rpois(N * G, lambda = exp(eta))
+y <- vector2list(y = y_vector,
                  G = G,
                  N = N)
 
@@ -44,7 +44,8 @@ data_REH <- list(y = y,
                  C = C,
                  G = G,
                  P = P,
-                 U = U)
+                 U = U,
+                 y_vector = y_vector)
 
 
 

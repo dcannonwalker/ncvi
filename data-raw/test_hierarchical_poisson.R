@@ -44,8 +44,8 @@ for (i in seq(1, G)) {
 
 data_hierarchical_legacy <- list(y = y_list,
                 etc = list(X = X,
-                           precison_beta = precision_beta,
-                           precision_mu0 = precision_mu0,
+                           t = precision_beta,
+                           s = precision_mu0,
                            G = G))
 
 SigmaBinit <- list()
@@ -90,8 +90,8 @@ init_theta <- list(
   M = rep(0, P),
   R = diag(P),
   Tau = diag(precision_beta, P),
-  precison_beta = precision_beta,
-  precision_mu0 = precision_mu0,
+  precision_beta = precision_beta,
+  precision_mu0 = precision_mu0
 )
 
 init_hierarchical_new <- list(
@@ -116,11 +116,16 @@ differentials_new <- list(
 )
 
 
-test_hierarchical_poisson <- list(data_hierarchical_legacy = data_legacy,
-                                  init_hierarchical_legacy = init_legacy,
-                                  data_hierarchical_new = data_new,
-                                  init_hierarchical_new = init_new,
-                                  priors_hierarchical_new = priors_new)
+test_hierarchical_poisson <- list(data_hierarchical_legacy =
+                                    data_hierarchical_legacy,
+                                  init_hierarchical_legacy =
+                                    init_hierarchical_legacy,
+                                  data_hierarchical_new =
+                                    data_hierarchical_new,
+                                  init_hierarchical_new =
+                                    init_hierarchical_new,
+                                  priors_hierarchical_new =
+                                    priors_hierarchical_new)
 
 usethis::use_data(data_hierarchical_legacy,
                   init_hierarchical_legacy,
