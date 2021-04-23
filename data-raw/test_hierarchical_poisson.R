@@ -13,13 +13,13 @@ N <- 10
 #
 # r <- rgamma(1, shape = ar, rate = br)
 
-s <- 1
+precision_mu0 <- 1
 
-t <- 1/3
+precision_beta <- 1/3
 
-mu0 <- mvtnorm::rmvnorm(1, mean = rep(0, P), sigma = diag(1/s, P))
+mu0 <- mvtnorm::rmvnorm(1, mean = rep(0, P), sigma = diag(1/precision_mu0, P))
 
-beta <- mvtnorm::rmvnorm(G, mean = mu0, sigma = diag(1/t, P))
+beta <- mvtnorm::rmvnorm(G, mean = mu0, sigma = diag(1/precision_beta, P))
 
 X <- cbind(1, kronecker(diag(1, P),rep(1, N/P))[, 2:P])
 
@@ -44,8 +44,8 @@ for (i in seq(1, G)) {
 
 data_hierarchical_legacy <- list(y = y_list,
                 etc = list(X = X,
-                           t = t,
-                           s = s,
+                           precison_beta = precision_beta,
+                           precision_mu0 = precision_mu0,
                            G = G))
 
 SigmaBinit <- list()
@@ -83,15 +83,15 @@ for (i in seq(1, G)) {
 }
 
 # conflicting names of r, t, and s is very annoying --
-## To do: fix variance component naming scheme
+## To do: fix variance component naming scheme [[done, but needs double check]]
 ## To do: write functions that don't depend on particular
 ##   names for params (bigger issue)
 init_theta <- list(
   M = rep(0, P),
   R = diag(P),
-  Tau = diag(t, P),
-  t = s,
-  r = t
+  Tau = diag(precision_beta, P),
+  precison_beta = precision_beta,
+  precision_mu0 = precision_mu0,
 )
 
 init_hierarchical_new <- list(

@@ -6,7 +6,7 @@
 distribution for the hierarchical mean of
 multivariate normal child nodes}
 \usage{
-conjugate_update_mvn_hierarchical_mean(pars)
+conjugate_update_mvn_hierarchical_mean(data, pars)
 }
 \arguments{
 \item{pars}{List with \code{phi} and \code{theta}}

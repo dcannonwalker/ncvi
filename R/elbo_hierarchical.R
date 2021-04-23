@@ -1,4 +1,5 @@
 ## To do: generalize
+## To do: fix internal precision pars names
 
 #' Contribution to ELBO of terms not included in group-wise ELBO
 #'
@@ -7,8 +8,8 @@
 elbo_extra <- function(data, pars) {
 
   phi <- pars$phi
-  r <- pars$theta$r
-  t <- pars$theta$t
+  r <- pars$theta$precision_beta
+  t <- pars$theta$precision_mu0
   M <- pars$theta$M
   G <- data$G
 
@@ -29,7 +30,7 @@ elbo_i <- function(data, pars) {
   C <- data$C
   mu <- pars$phi$mu
   Sigma <- pars$phi$Sigma
-  sig2 <- 1 / pars$theta$r
+  sig2 <- 1 / pars$theta$precision_beta
 
   A <- c(C %*% mu + 0.5 * diag(C %*% Sigma %*% t(C)))
 
@@ -50,7 +51,6 @@ elbo_hierarchical <- function(data, pars) {
 
   phi <- pars$phi
   theta <- pars$theta
-  t <- pars$theta$t
   C <- data$C
   y <- data$y
   G <- data$G
