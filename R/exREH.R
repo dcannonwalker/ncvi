@@ -60,6 +60,7 @@ elbo_i_REH <- function(data, pars) {
     0.5 * log(det(Sigma))
 }
 
+#' @export
 elbo_REH <- function(data, pars) {
 
   phi <- pars$phi

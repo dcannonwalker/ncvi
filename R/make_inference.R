@@ -4,6 +4,7 @@
 #'
 #' @param fit A fit produced by `fit_ncvi()`
 #' @param alpha Confidence level
+#' @export
 make_ci_list <- function(fit, alpha = 0.05) {
   lapply(fit$pars$phi, function(x){
     mean <- x$mu
@@ -14,6 +15,10 @@ make_ci_list <- function(fit, alpha = 0.05) {
   })
 }
 
+#' Construct data frame of confidence intervals
+#'
+#' @param fit
+#' @export
 make_ci <- function(fit, alpha = 0.05, par_names = NULL) {
   ci_list <- make_ci_list(fit, alpha)
   data <- fit$data
