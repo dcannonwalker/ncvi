@@ -1,0 +1,62 @@
+---
+title: "mixture-prior-example"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{mixture-prior-example}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+devtools::load_all()
+data("exMixtureData")
+list2env(exMixtureData, globalenv())
+```
+
+```{r init}
+inits <- generate_inits(G = G, N = N, P = P, U = U,
+               precision_mu0 = precision_mu0,
+               precision_beta = precision_beta,
+               precision_u = precision_u, 
+               mu_adjust = 3)
+inits$pi <- vector2list(rep(0.5, G), G, 1)
+priors <- list(pi0 = 0.5)
+differentials_mixture <- list(
+  Sigma = function(data, pars) {
+    d_mvn_cov(data, pars, d_mixture_cov_poisson)
+  },
+  mu = function(data, pars) {
+    d_mvn_mean(data, pars, d_mixture_mean_poisson)
+  }
+)
+```
+
+```{r fit}
+elbo_mixture(data = exMixtureData, pars = inits, priors = priors)
+
+fit_ncvi(data = exMixtureData, init = inits, update_pars = update_pars, 
+         elbo = elbo_mixture, 
+         priors = priors, differentials = differentials_mixture)
+pars <- inits
+update_pars(data = exMixtureData, pars = pars, 
+            args = list(differentials = differentials_mixture, priors = priors))
+pars$phi <- update_phi(data = exMixtureData, pars = pars, differentials = differentials_mixture)
+pars$theta <- update_theta(data = exMixtureData, pars = pars, priors = priors)
+update_pi(data = exMixtureData, pars = pars, priors = priors)
+
+i = 3
+update_bern(data = list(y = y[[i]], C = C),
+                           pars = list(phi = pars$phi[[i]], theta = pars$theta),
+                           priors = priors)
+y[[10]]
+
+
+
+```

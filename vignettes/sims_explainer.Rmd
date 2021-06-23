@@ -1,0 +1,215 @@
+---
+title: "Simulations to Explain"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+devtools::load_all()
+```
+
+Simulation with 2 fixed effects per gene. The treatment effect has a 
+mixture prior, with one component a point mass at 0.
+```{r simulation_fixedOnly}
+settings = list(
+  P = 2,
+  N = 6,
+  G = 1000,
+  X = cbind(rep(1, 6), rep(c(0, 1), each = 3)),
+  M = c(1, 1),
+  precision_mu0 = 10,
+  precision_beta = 2,
+  pi0 = 0.2
+)
+sim1 <- sim_data_mixtureFixedOnly(settings, 5562)
+settings$mu0 <- sim1$mu0
+init <- generate_inits_mixtureFixedOnly(settings = settings)
+
+differentials_mixture <- list(
+  Sigma = function(data, pars) {
+    d_mvn_cov(data, pars, d_mixture_cov_poisson)
+  },
+  mu = function(data, pars) {
+    d_mvn_mean(data, pars, d_mixture_mean_poisson)
+  }
+)
+
+fit <- fit_ncvi(data = sim1,
+                init = init, update_pars = update_pars,
+                elbo = elbo_mixture,
+                elbo_list = elbo_mixture_list,
+                differentials = differentials_mixture,
+                options = list(max_iter = 100,
+                               elbo_delta = 0.01,
+                               verbose = F,
+                               simple_elbo = F))
+```
+```{r sim1output, echo=F}
+print("Posterior mean of hierarchical mean parameter")
+fit$pars$theta$M[1:2] 
+print("True hierarchical mean")
+sim1$mu0
+print("Groups where beta1 is actually non-zero")
+indices <- which(sim1$beta[,2] != 0)
+indices
+
+print("Groups where posterior probability beta1 non-zero is high")
+indices_identified <- which(fit$pars$pi > 0.999)
+indices_identified
+
+print("Proportion of false positives (Q)")
+1 - sum(indices_identified %in% indices) / length(indices_identified)
+print("Proportion of true positives identified")
+sum(indices_identified %in% indices) / length(indices) 
+
+```
+
+Simulation with 2 fixed effects and 3 random effects per gene.
+```{r simulation_randomEffects}
+settings = list(
+  P = 2,
+  U = 3,
+  Z = cbind(rep(c(1, 0, 0), each = 2), 
+            rep(c(0, 1, 0), each = 2), 
+            rep(c(0, 0, 1), each = 2)),
+  N = 6,
+  G = 100,
+  X = cbind(rep(1, 6), rep(c(0, 1), each = 3)),
+  M = c(1, 2),
+  precision_mu0 = 10,
+  precision_beta = 4,
+  precision_u = 8,
+  pi0 = 0.2
+)
+sim2 <- sim_data_mixture(settings, 5562)
+settings$mu0 <- sim2$mu0
+init <- generate_inits_mixture(settings = settings)
+
+differentials_mixture <- list(
+  Sigma = function(data, pars) {
+    d_mvn_cov(data, pars, d_mixture_cov_poisson)
+  },
+  mu = function(data, pars) {
+    d_mvn_mean(data, pars, d_mixture_mean_poisson)
+  }
+)
+
+fit <- fit_ncvi(data = sim2,
+                init = init, update_pars = update_pars,
+                elbo = elbo_mixture,
+                elbo_list = elbo_mixture_list,
+                differentials = differentials_mixture,
+                options = list(max_iter = 100,
+                               elbo_delta = 0.01,
+                               verbose = F,
+                               simple_elbo = F))
+```
+```{r sim2output, echo=F}
+print("Posterior mean of hierarchical mean parameter")
+fit$pars$theta$M[1:2]
+print("True hierarchical mean")
+sim2$mu0
+print("Groups where beta1 is actually non-zero")
+indices <- which(sim2$beta[,2] != 0)
+indices
+
+print("Groups where posterior probability beta1 non-zero > 0.999")
+indices_identified <- which(fit$pars$pi > 0.999)
+indices_identified
+
+print("Proportion of false positives (Q)")
+1 - sum(indices_identified %in% indices) / length(indices_identified)
+print("Proportion of true positives identified")
+sum(indices_identified %in% indices) / length(indices) 
+```
+
+The proportion of false positives, vs. the proportion true positives identified,
+for a set of 100 simulations with settings of `sim2` above.
+
+```{r simSet}
+load("../data/sim_tests.rda")
+plot(tests$error, tests$power)
+```
+
+Known issues: 
+
+Some of the $\phi_g$ variational covariance matrices are singular.
+Maybe more likely to happen if $\beta, u$ have larger variance.
+
+```{r problems_singular, error=T}
+settings = list(
+  P = 2,
+  U = 3,
+  Z = cbind(rep(c(1, 0, 0), each = 2), 
+            rep(c(0, 1, 0), each = 2), 
+            rep(c(0, 0, 1), each = 2)),
+  N = 6,
+  G = 1000,
+  X = cbind(rep(1, 6), rep(c(0, 1), each = 3)),
+  M = c(1, 2),
+  precision_mu0 = 10,
+  precision_beta = 1,
+  precision_u = 1,
+  pi0 = 0.2
+)
+sim1 <- sim_data_mixture(settings, 101)
+settings$mu0 <- sim1$mu0
+init <- generate_inits_mixture(settings = settings)
+
+differentials_mixture <- list(
+  Sigma = function(data, pars) {
+    d_mvn_cov(data, pars, d_mixture_cov_poisson)
+  },
+  mu = function(data, pars) {
+    d_mvn_mean(data, pars, d_mixture_mean_poisson)
+  }
+)
+
+fit <- fit_ncvi(data = sim1,
+                init = init, update_pars = update_pars,
+                elbo = elbo_mixture,
+                elbo_list = elbo_mixture_list,
+                differentials = differentials_mixture,
+                options = list(max_iter = 100,
+                               elbo_delta = 0.01,
+                               verbose = T,
+                               simple_elbo = F))
+```
+
+With large values in simulation settings,
+some expressions evaluate to `Inf` or `NaN`, and eventually crash 
+the algorithm. 
+```{r problems_infinite, error=T}
+settings = list(
+  P = 2,
+  N = 6,
+  G = 1000,
+  X = cbind(rep(1, 6), rep(c(0, 1), each = 3)),
+  M = c(1, 15),
+  precision_mu0 = 10,
+  precision_beta = 10,
+  pi0 = 0.2
+)
+sim1 <- sim_data_mixtureFixedOnly(settings, 5562)
+settings$mu0 <- sim1$mu0
+init <- generate_inits_mixtureFixedOnly(settings = settings)
+
+differentials_mixture <- list(
+  Sigma = function(data, pars) {
+    d_mvn_cov(data, pars, d_mixture_cov_poisson)
+  },
+  mu = function(data, pars) {
+    d_mvn_mean(data, pars, d_mixture_mean_poisson)
+  }
+)
+
+fit <- fit_ncvi(data = sim1,
+                init = init, update_pars = update_pars,
+                elbo = elbo_mixture,
+                elbo_list = elbo_mixture_list,
+                differentials = differentials_mixture,
+                options = list(max_iter = 100,
+                               elbo_delta = 0.01,
+                               verbose = T,
+                               simple_elbo = F))
+```

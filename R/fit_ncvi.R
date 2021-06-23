@@ -10,7 +10,7 @@
 #' @param data List of observed or known variables used by the
 #'   differentials or update functions
 #' @param init List of initial values for unknown variables
-#'   updated by the algorithm; should have 'phi' and 'theta'
+#'   updated by the algorithm
 #' @param update_pars Function to carry out the update to
 #'   `pars` at each step
 #' @param elbo Function to calculate the ELBO for the model
@@ -26,31 +26,64 @@ fit_ncvi <- function(data, init,
                  elbo,
                  options = list(max_iter = 100,
                                 elbo_delta = 0.0001,
-                                verbose = T),
+                                verbose = T,
+                                fixed_iter = F),
                  ...) {
 
   args <- list(...)
-  L = elbo(data, init)
   pars = init
   iter = 0
   delta = options$elbo_delta + 1
+  L = NULL
 
+  if (options$fixed_iter == F) {
+    while (iter < options$max_iter &&
+           abs(delta) > options$elbo_delta) {
 
-  while (iter < options$max_iter &&
-         delta > options$elbo_delta) {
+      pars_old <- pars
 
-    pars <- update_pars(data, pars, args)
+      pars <- update_pars(data, pars, args)
 
-    delta <- abs(L - (L <- elbo(data,pars)))
+      elbo_out <- elbo(data, pars_new = pars, pars_old = pars_old)
 
-    iter <- iter + 1
+      iter <- iter + 1
 
-    if (options$verbose == T) print(c(L, iter))
+      L <- elbo_out$L
 
+      delta <- elbo_out$delta
+
+      if (is.na(delta)) {
+        print("delta is NA, continuing")
+        delta <- options$elbo_delta + 1
+      }
+
+      else if (is.nan(delta)) {
+        print("delta is NaN, continuing")
+        delta <- options$elbo_delta + 1
+      }
+
+      else if(is.infinite(delta)) {
+        print("delta is infinite, continuing")
+        delta <- options$elbo_delta + 1
+      }
+
+      if (options$verbose == T) print(c(delta, iter, L))
+
+    }
+
+  }
+  else if (options$fixed_iter == T) {
+    while (iter < options$max_iter) {
+
+      pars <- update_pars(data, pars, args)
+
+      iter <- iter + 1
+
+    }
   }
 
   list(pars = pars,
        data = data,
-       elbo = L)
+       L = L)
 
 }

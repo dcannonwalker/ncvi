@@ -9,7 +9,7 @@ fit_ncvi(
   init,
   update_pars,
   elbo,
-  options = list(max_iter = 100, elbo_delta = 1e-04, verbose = T),
+  options = list(max_iter = 100, elbo_delta = 1e-04, verbose = T, simple_elbo = T),
   ...
 )
 }
@@ -18,7 +18,7 @@ fit_ncvi(
 differentials or update functions}
 
 \item{init}{List of initial values for unknown variables
-updated by the algorithm; should have 'phi' and 'theta'}
+updated by the algorithm}
 
 \item{update_pars}{Function to carry out the update to
 \code{pars} at each step}

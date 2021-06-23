@@ -16,8 +16,8 @@ elbo_extra <- function(data, pars) {
   collection_mu_i <- lapply(phi, function(x) x$mu)
 
   sum_mu_i <- Reduce("+", collection_mu_i)
-
-  -0.5 * (r + (G * t)) * sum(M^2) + t * sum_mu_i %*% M
+  # check that the precision pars are in the correct places?
+  -0.5 * (t + (G * r)) * sum(M^2) + r * sum_mu_i %*% M
 }
 
 #' Contribution to EBLO from a single group
@@ -57,7 +57,7 @@ elbo_hierarchical <- function(data, pars) {
 
   L <- elbo_extra(data, pars)
 
-  for (i in seq(1,G)) {
+  for (i in seq(1, G)) {
     L <- L + elbo_i(data = list(y = y[[i]], C = C),
                    pars = list(phi = phi[[i]], theta = theta))
   }

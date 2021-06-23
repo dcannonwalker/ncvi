@@ -51,7 +51,6 @@ d_mvn_mean <- function(data, pars, d_likelihood) {
   Tau <- pars$theta$Tau
   M <- pars$theta$M
   mu <- pars$phi$mu
-
   Tau %*% (M - mu) + d_likelihood(data, pars)
 }
 
