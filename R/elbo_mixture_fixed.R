@@ -86,26 +86,18 @@ elbo_mixture_list <- function(data, pars) {
   list(extra = extra, elbo_i_list = elbo_i_list)
 }
 
-elbo_mixture <- function(data, pars_new, pars_old = NULL) {
+elbo_mixture <- function(data, pars, old_elbo = NULL) {
+  elbo_list <- elbo_mixture_list(data, pars)
+  elbo_vector <- unlist(elbo_list$elbo_i_list)
+  elbo_vector[length(elbo_vector) + 1] <- elbo_list$extra
 
-  if (is.null(pars_old)) {
-    list(L = elbo_mixture_list(data, pars_new))
+  elbo <- sum(elbo_vector)
+  if (!is.null(old_elbo)) {
+    list(delta_vector = elbo_vector - old_elbo$elbo_vector,
+         delta = sum(elbo_vector - old_elbo$elbo_vector),
+         elbo_vector = elbo_vector,
+         elbo = elbo)
   }
-
-  else if (!is.null(pars_old)) {
-    elbo_old <- elbo_mixture_list(data, pars_old)
-    elbo_new <- elbo_mixture_list(data, pars_new)
-
-    delta <- elbo_new$extra - elbo_old$extra
-    L <- elbo_new$extra
-
-    for (i in seq(1, data$G)) {
-      delta <- delta + (elbo_new$elbo_i_list[[i]] -
-                          elbo_old$elbo_i_list[[i]])
-      L <- L + elbo_new$elbo_i_list[[i]]
-    }
-
-    list(delta = delta, L = L, elbo_list = elbo_new)
-  }
+  else list(elbo_vector = elbo_vector, elbo = elbo)
 
 }

@@ -39,11 +39,5 @@ conjugate_update_gamma_precision_matrix <- function(data, pars, priors) {
 
 }
 
-conjugate_update_gamma_precision <- function() {
 
-
-
-  list(t = t)
-
-}
 
