@@ -35,10 +35,16 @@ fit_ncvi <- function(data, init,
   iter = 0
   L = elbo(data, pars, priors = args$priors)
   L$delta <- options$elbo_delta + 1
+  maxL_pars <- pars
+  if (!is.nan(L$elbo) &
+      !is.infinite(L$elbo) &
+      !is.na(L$elbo) &
+      !is.null(L$elbo)) {
+    maxL <- L$elbo
+  }
   if (options$fixed_iter == F) {
     while (iter < options$max_iter &&
            abs(L$delta) > options$elbo_delta) {
-
 
       pars <- update_pars(data, pars, args)
 
@@ -63,9 +69,21 @@ fit_ncvi <- function(data, init,
         L$delta <- options$elbo_delta + 1
       }
 
+      else if(!is.nan(L$elbo) &
+              !is.infinite(L$elbo) &
+              !is.na(L$elbo) &
+              !is.null(L$elbo)) {
+        if (L$elbo > maxL) {
+          maxL_pars <- pars
+          maxL <- L$elbo
+        }
+      }
+
+
       if (options$verbose == T) print(data.frame(iter = iter,
                                                  elbo = L$elbo,
-                                                 delta = L$delta))
+                                                 delta = L$delta,
+                                                 max_elbo = maxL))
 
     }
 
@@ -81,6 +99,7 @@ fit_ncvi <- function(data, init,
   }
 
   list(pars = pars,
+       maxL_pars = maxL_pars,
        data = data,
        L = L)
 

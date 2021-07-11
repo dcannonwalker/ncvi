@@ -1,8 +1,8 @@
-update_pars <- function(data, pars, args) {
+update_pars_mixture <- function(data, pars, args) {
 
-  pars$phi <- update_phi(data, pars, args$differentials)
+  pars$phi <- update_phi_mixture(data, pars)
 
-  pars$theta <- update_theta(data, pars, args$priors)
+  pars$theta <- update_theta_mixture(data, pars, args$priors)
 
   pars$pi <- update_pi(data, pars)
 
@@ -11,34 +11,94 @@ update_pars <- function(data, pars, args) {
 
 # can augment with precision updates
 
-update_theta <- function(data, pars, priors) {
+update_theta_mixture <- function(data, pars, priors) {
   theta <- pars$theta
   U <- data$U
   pars_mu0 <- conjugate_update_mvn_REH(data, pars)
   theta$M <- c(pars_mu0$M, rep(0, U))
   theta$R <- pars_mu0$R
+  if (!is.null(priors)) {
+    list_beta <- update_precision_beta_mixture(data, pars, priors)
+    if (U != 0) {
+      list_u <- update_precision_u_mixture(data, pars, priors)
+      theta$precision_u <- c(list_u$mean)
+      theta$list_u <- list_u
+    }
+    theta$precision_beta <- c(list_beta$mean)
+    theta$Tau <- diag(c(rep(theta$precision_beta, data$P),
+                        rep(theta$precision_u, data$U)))
+    theta$list_beta <- list_beta
+
+  }
 
   theta
 
 }
 
-update_phi <- function(data, pars, differentials) {
+update_precision_u_mixture <- function(data, pars, priors) {
+  phi <- pars$phi
+  M <- pars$theta$M
+  R <- pars$theta$R
+  G <- data$G
+  P <- data$P
+  U <- data$U
+  a_u <- priors$a_u
+  b_u <- priors$b_u
+  collection_mu_i2 <- lapply(phi,
+                             function(x) x$mu[(P + 1):(P + U)]^2)
+  sum_mu_i2 <- Reduce("+", collection_mu_i2)
+  collection_diag_Sigma_i <- lapply(phi,
+                                    function(x) diag(x$Sigma)[(P + 1):(P + U)])
+  sum_diag_Sigma_i <- Reduce("+", collection_diag_Sigma_i)
+
+  a <- G * U / 2 + a_u
+  b <- b_u + (sum(sum_mu_i2) + sum(sum_diag_Sigma_i)) / 2
+
+  list(mean = a / b, a = a, b = b)
+
+}
+
+update_precision_beta_mixture <- function(data, pars, priors) {
+  phi <- pars$phi
+  G <- data$G
+  P <- data$P
+  M <- pars$theta$M[1:P]
+  R <- pars$theta$R
+  a_beta <- priors$a_beta
+  b_beta <- priors$b_beta
+  collection_mu_i <- lapply(phi, function(x) x$mu[1:P])
+  collection_mu_i2 <- lapply(collection_mu_i, function(x) x^2)
+  sum_mu_i <- Reduce("+", collection_mu_i)
+  sum_mu_i2 <- Reduce("+", collection_mu_i2)
+  collection_diag_Sigma_i <- lapply(phi, function(x) diag(x$Sigma)[1:P])
+  sum_diag_Sigma_i <- Reduce("+", collection_diag_Sigma_i)
+
+  a <- G * P / 2 + a_beta
+  b <- b_beta + (sum(sum_mu_i2) + sum(sum_diag_Sigma_i) -
+                   2 * t(M) %*% sum_mu_i + G * sum(M^2) + G * sum(diag(R))) / 2
+
+  list(mean = a / b, a = a, b = b)
+}
+
+update_phi_mixture <- function(data, pars) {
 
   phi <- pars$phi
   theta <- pars$theta
   pi <- pars$pi
   y <- data$y
   C <- data$C
-  C1 <- data$C1
-  C0 <- data$C0
   G <- data$G
+  P <- data$P
 
   for (i in seq(1, G)) {
 
-    phi[[i]] <- nc_update_mvn(data = list(y = y[[i]], C = C, C1 = C1, C0 = C0),
+    phi[[i]] <- nc_update_mvn(data = list(y = y[[i]], C = C, P = P),
                               pars = list(phi = phi[[i]], theta = theta,
                                           pi = pi[[i]]),
-                              differentials = differentials)
+                              differentials = list(
+                                Sigma = d_mvn_cov_mixture,
+                                mu = d_mvn_mean_mixture
+                              ))
 
   }
 
@@ -54,14 +114,14 @@ update_pi <- function(data, pars) {
   pi <- pars$pi
   y <- data$y
   C <- data$C
-  C1 <- data$C1
-  C0 <- data$C0
   G <- data$G
+  P <- data$P
 
   for (i in seq(1, G)) {
 
-    pi[[i]] <- update_bern(data = list(y = y[[i]], C = C, C1 = C1, C0 = C0),
-                           pars = list(phi = phi[[i]], theta = theta))
+    pi[[i]] <- update_pi_i(data = list(y = y[[i]], C = C, P = P),
+                           pars = list(phi = phi[[i]], theta = theta),
+                           i = i)
 
   }
 
@@ -69,60 +129,35 @@ update_pi <- function(data, pars) {
   pi
 }
 
-update_bern <- function(data, pars) {
+update_pi_i <- function(data, pars, i) {
 
-  phi <- pars$phi
-  mu <- phi$mu
-  Sigma <- phi$Sigma
-  theta <- pars$theta
+  mu <- pars$phi$mu
+  Sigma <- pars$phi$Sigma
   y <- data$y
-  C1 <- data$C1
-  C0 <- data$C0
-  pi0 <- theta$pi0
-  A0 <- log(pi0) + t(y) %*% C0 %*% mu -
-    sum(exp(C0 %*% mu  +
-            0.5 * diag(C0 %*% Sigma %*% t(C0))))
-  A1 <- log(1 - pi0) + t(y) %*% C1 %*% mu -
-    sum(exp(C1 %*% mu  + 0.5 * diag(C1 %*% Sigma %*% t(C1))))
+  P <- data$P
+  C <- data$C
+  C0 <- C
+  C0[, P] <- 0
 
-  pi <- (exp(A1 - A0) + 1)^-1
+  pi0 <- pars$theta$pi0
+
+  A0 <- C0 %*% mu  +
+    0.5 * diag(C0 %*% Sigma %*% t(C0))
+  A1 <- C %*% mu  + 0.5 * diag(C %*% Sigma %*% t(C))
+  B0 <- log(pi0) + t(y) %*% C0 %*% mu -
+    sum(exp(A0))
+  B1 <- log(1 - pi0) + t(y) %*% C %*% mu -
+    sum(exp(A1))
+
+  pi <- c((exp(B1 - B0) + 1)^-1)
+  if (is.nan(pi)) {
+    message("pi is nan", i)
+  }
 
   #return variational mean
-  c(pi)
+  max(min(pi, 1 - 1e-10), 1e-6)
 
 }
 
-# Transpose of differential wrt mvn mean from poisson likelihood,
-# where the second fixed effect parameter has a mixture prior of
-# Gaussian and point mass at zero.
-d_mixture_mean_poisson <- function(data, pars) {
-  C1 <- data$C1
-  C0 <- data$C0
-  y <- data$y
-  mu <- pars$phi$mu
-  Sigma <- pars$phi$Sigma
-  pi <- pars$pi
-  # Wrap in 'c()' to drop matrix to vector
-  A1 <- c(C1 %*% mu + 0.5 * diag(C1 %*% Sigma %*% t(C1)))
-  A0 <- c(C0 %*% mu + 0.5 * diag(C0 %*% Sigma %*% t(C0)))
-  pi * t(C0) %*% (y - exp(A0)) + (1 - pi) * t(C1) %*% (y - exp(A1))
-}
 
-# Vec inverse of differential wrt vec of mvn covariance from poisson likelihood,
-# where the second fixed effect parameter has a mixture prior of
-# Gaussian and point mass at zero.
-d_mixture_cov_poisson <- function(data, pars) {
-  C1 <- data$C1
-  C0 <- data$C0
-  mu <- pars$phi$mu
-  Sigma <- pars$phi$Sigma
-  pi <- pars$pi
-  # Wrap in 'c()' to drop matrix to vector
-  # Should use 'drop()' instead?
-  A1 <- c(C1 %*% mu + 0.5 * diag(C1 %*% Sigma %*% t(C1)))
-  A0 <- c(C0 %*% mu + 0.5 * diag(C0 %*% Sigma %*% t(C0)))
-
-  pi * t(C0) %*% diag(exp(A0)) %*% C0 +
-    (1 - pi) * t(C1) %*% diag(exp(A1)) %*% C1
-}
 
