@@ -31,9 +31,9 @@ update_theta_mixture <- function(data, pars, priors) {
                           rep(theta$precision_u, data$U)))
     }
 
-    else if (length(list_beta$mean) == P) {
-      theta$Tau <- diag(c(theta$precision_beta),
-                        rep(theta$precision_u, data$U))
+    else if (length(list_beta$mean) == data$P) {
+      theta$Tau <- diag(c(theta$precision_beta,
+                        rep(theta$precision_u, data$U)))
     }
 
   }
@@ -96,14 +96,10 @@ update_precision_beta_mixture <- function(data, pars, priors) {
     collection_diag_Sigma_i <- lapply(phi, function(x) diag(x$Sigma)[1:P])
     sum_diag_Sigma_i <- Reduce("+", collection_diag_Sigma_i)
 
-    a <- rep(G / 2 + a_beta, P)
+    a <- G / 2 + a_beta
     b <- b_beta + (sum_mu_i2 + sum_diag_Sigma_i -
                      2 * M * sum_mu_i + G * M^2 + G * diag(R)) / 2
   }
-
-  a <- G * P / 2 + a_beta
-  b <- b_beta + (sum(sum_mu_i2) + sum(sum_diag_Sigma_i) -
-                   2 * t(M) %*% sum_mu_i + G * sum(M^2) + G * sum(diag(R))) / 2
 
   list(mean = a / b, a = a, b = b)
 }

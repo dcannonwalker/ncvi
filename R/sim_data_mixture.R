@@ -38,6 +38,7 @@ sim_data_mixture <- function(settings) {
     b_beta <- priors$b_beta
     precision_mu0 <- settings$precision_mu0
 
+    # if using a set value for precision_beta
     if (is.null(settings$precision_beta)) {
       precision_beta <- a_beta / b_beta
       if (!is.null(settings$varComps)) {
@@ -51,6 +52,17 @@ sim_data_mixture <- function(settings) {
       precision_beta = settings$precision_beta
     }
 
+    if (!is.null(settings$sim_precision)) {
+
+      if(settings$sim_precision == "model") {
+        precision_beta <- rgamma(P, shape = a_beta, rate = b_beta)
+      }
+
+      else if (settings$sim_precision == "flat") {
+        precision_beta <- sim_precision_beta(a_beta, b_beta, type = "flat")
+      }
+    }
+
 
     list_beta <- list(mean = precision_beta,
                       a = a_beta,
@@ -60,7 +72,14 @@ sim_data_mixture <- function(settings) {
     if (U != 0) {
       a_u <- priors$a_u
       b_u <- priors$b_u
-      precision_u <- a_u / b_u
+      if (!is.null(settings$sim_precision)) {
+        if (settings$sim_precision == "model") {
+          precision_u <- rgamma(1, shape = a_u, rate = b_u)
+        }
+      }
+
+      else precision_u <- a_u / b_u
+
       list_u <- list(mean = precision_u,
                      a = a_u,
                      b = b_u)
@@ -172,12 +191,11 @@ sim_data_mixture <- function(settings) {
     if (U != 0) true_theta$list_u <- list_u
   }
 
-
+  temp_Sigma <- MASS::ginv(true_theta$Tau)
   true_phi <- list()
   for (i in seq(1, G)) {
     true_phi[[i]] <- list(mu = c(beta[i, ], rep(0, U)),
-                     Sigma = diag(c(rep(1 / precision_beta, P),
-                                    rep(1 / precision_u, U))))
+                     Sigma = temp_Sigma)
   }
 
   truepars_init <- list(theta = true_theta,
