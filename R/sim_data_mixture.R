@@ -37,7 +37,21 @@ sim_data_mixture <- function(settings) {
     a_beta <- priors$a_beta
     b_beta <- priors$b_beta
     precision_mu0 <- settings$precision_mu0
-    precision_beta <- a_beta / b_beta
+
+    if (is.null(settings$precision_beta)) {
+      precision_beta <- a_beta / b_beta
+      if (!is.null(settings$varComps)) {
+        if (settings$varComps == T) {
+          precision_beta = rep(a_beta / b_beta, P)
+        }
+      }
+    }
+
+    else if (!is.null(settings$precision_beta)) {
+      precision_beta = settings$precision_beta
+    }
+
+
     list_beta <- list(mean = precision_beta,
                       a = a_beta,
                       b = b_beta)
@@ -65,9 +79,18 @@ sim_data_mixture <- function(settings) {
 
   else mu0 <- settings$mu0
 
-  beta <- mvtnorm::rmvnorm(n = G,
-                           mean = mu0,
-                           sigma = diag(1/precision_beta, P))
+  if (length(precision_beta) == 1) {
+    beta <- mvtnorm::rmvnorm(n = G,
+                             mean = mu0,
+                             sigma = diag(1/precision_beta, P))
+  }
+
+  else if (length(precision_beta) == P) {
+    beta <- mvtnorm::rmvnorm(n = G,
+                             mean = mu0,
+                             sigma = diag(1/precision_beta))
+  }
+
   D <- rbinom(n = G, 1, pi0)
 
   beta[, P] <- (1 - D) * beta[, P]
@@ -116,15 +139,30 @@ sim_data_mixture <- function(settings) {
 
 
 
-  true_theta = list(
-    M = c(mu0, rep(0, U)),
-    R = diag(1 / precision_mu0, P),
-    Tau = diag(c(rep(precision_beta, P), rep(precision_u, U))),
-    precision_beta = precision_beta,
-    precision_u = precision_u,
-    precision_mu0 = precision_mu0,
-    pi0 = pi0
-  )
+  if (length(precision_beta) == 1) {
+    true_theta = list(
+      M = c(mu0, rep(0, U)),
+      R = diag(1 / precision_mu0, P),
+      Tau = diag(c(rep(precision_beta, P), rep(precision_u, U))),
+      precision_beta = precision_beta,
+      precision_u = precision_u,
+      precision_mu0 = precision_mu0,
+      pi0 = pi0
+    )
+  }
+
+  else if (length(precision_beta) == P) {
+    true_theta = list(
+      M = c(mu0, rep(0, U)),
+      R = diag(1 / precision_mu0, P),
+      Tau = diag(c(precision_beta, rep(precision_u, U))),
+      precision_beta = precision_beta,
+      precision_u = precision_u,
+      precision_mu0 = precision_mu0,
+      pi0 = pi0
+    )
+  }
+
   if(settings$adjust$decide == T) {
     true_theta$M[1] = true_theta$M[1] + log(settings$adjust$offset)
   }
