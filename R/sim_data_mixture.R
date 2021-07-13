@@ -85,7 +85,10 @@ sim_data_mixture <- function(settings) {
   }
 
   eta <- c(apply(phi, 1, function(p) C %*% p))
-  if (settings$family == "poisson" | is.null(settings$family)) {
+  if (is.null(settings$family)) {
+    y_vector = rpois(N * G, lambda = exp(eta))
+  }
+  else if (settings$family == "poisson" | is.null(settings$family)) {
     y_vector = rpois(N * G, lambda = exp(eta))
   }
   else if (settings$family == "nbinom") {
@@ -150,9 +153,12 @@ sim_data_mixture <- function(settings) {
                         precision_u = precision_u,
                         D = D,
                         pi0 = pi0)
-  if (settings$family == "nbinom") {
-    truepars_ncvi$dispersion <- dispersion
+  if (!is.null(settings$family)) {
+    if (settings$family == "nbinom") {
+      truepars_ncvi$dispersion <- dispersion
+    }
   }
+
 
   data_ncvi <- list(y = y,
                    C = C,

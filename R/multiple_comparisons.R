@@ -6,28 +6,50 @@ bfdr <- function(post_prob) {
   })
 }
 
-tfdr <- function(post_prob, true_null) {
-  tn <- true_null[order(post_prob)]
+tfdr <- function(p, true_null) {
+  tn <- true_null[order(p)]
   n <- 1:length(tn)
   sapply(n, function(x) {
     sum(tn[1:x]) / x
   })
 }
 
-tpr <- function(post_prob, true_null) {
-  tp <- 1 - true_null[order(post_prob)]
-  p <- post_prob[order(post_prob)]
+tpr <- function(p, true_null) {
+  tp <- 1 - true_null[order(p)]
+  p <- p[order(p)]
   n <- 1:length(p)
   sapply(n, function(x) {
     sum(tp[1:x]) / sum(tp)
   })
 }
 
-fpr <- function(post_prob, true_null) {
-  tn <- true_null[order(post_prob)]
-  p <- post_prob[order(post_prob)]
+fpr <- function(p, true_null) {
+  tn <- true_null[order(p)]
+  p <- p[order(p)]
   n <- 1:length(p)
   sapply(n, function(x) {
     sum(tn[1:x]) / sum(tn)
   })
+}
+
+get_all_multiple_comparisons <- function(p, true_null,
+                                         method = NULL) {
+  if (is.null(method)) {
+    list(
+      p = p[order(p)],
+      fdr = bfdr(p),
+      tfdr = tfdr(p, true_null),
+      tpr = tpr(p, true_null),
+      fpr = fpr(p, true_null)
+  )
+  }
+  else if (method == "edgeR") {
+    list(
+      p = p[order(p)],
+      fdr = p[order(p)],
+      tfdr = tfdr(p, true_null),
+      tpr = tpr(p, true_null),
+      fpr = fpr(p, true_null)
+    )
+  }
 }

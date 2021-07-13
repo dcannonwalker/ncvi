@@ -19,15 +19,22 @@ update_theta_mixture <- function(data, pars, priors) {
   theta$R <- pars_mu0$R
   if (!is.null(priors)) {
     list_beta <- update_precision_beta_mixture(data, pars, priors)
+    theta$list_beta <- list_beta
     if (U != 0) {
       list_u <- update_precision_u_mixture(data, pars, priors)
       theta$precision_u <- c(list_u$mean)
       theta$list_u <- list_u
     }
     theta$precision_beta <- c(list_beta$mean)
-    theta$Tau <- diag(c(rep(theta$precision_beta, data$P),
-                        rep(theta$precision_u, data$U)))
-    theta$list_beta <- list_beta
+    if (length(list_beta$mean) == 1) {
+      theta$Tau <- diag(c(rep(theta$precision_beta, data$P),
+                          rep(theta$precision_u, data$U)))
+    }
+
+    else if (length(list_beta$mean) == P) {
+      theta$Tau <- diag(c(theta$precision_beta),
+                        rep(theta$precision_u, data$U))
+    }
 
   }
 
@@ -66,12 +73,33 @@ update_precision_beta_mixture <- function(data, pars, priors) {
   R <- pars$theta$R
   a_beta <- priors$a_beta
   b_beta <- priors$b_beta
-  collection_mu_i <- lapply(phi, function(x) x$mu[1:P])
-  collection_mu_i2 <- lapply(collection_mu_i, function(x) x^2)
-  sum_mu_i <- Reduce("+", collection_mu_i)
-  sum_mu_i2 <- Reduce("+", collection_mu_i2)
-  collection_diag_Sigma_i <- lapply(phi, function(x) diag(x$Sigma)[1:P])
-  sum_diag_Sigma_i <- Reduce("+", collection_diag_Sigma_i)
+  if (length(pars$theta$precision_beta) == 1) {
+    collection_mu_i <- lapply(phi, function(x) x$mu[1:P])
+    collection_mu_i2 <- lapply(collection_mu_i, function(x) x^2)
+    sum_mu_i <- Reduce("+", collection_mu_i)
+    sum_mu_i2 <- Reduce("+", collection_mu_i2)
+    collection_diag_Sigma_i <- lapply(phi, function(x) diag(x$Sigma)[1:P])
+    sum_diag_Sigma_i <- Reduce("+", collection_diag_Sigma_i)
+
+    a <- G * P / 2 + a_beta
+    b <- b_beta + (sum(sum_mu_i2) + sum(sum_diag_Sigma_i) -
+                     2 * t(M) %*% sum_mu_i + G * sum(M^2) + G * sum(diag(R))) / 2
+
+    list(mean = a / b, a = a, b = b)
+  }
+
+  else if (length(pars$theta$precision_beta) == P) {
+    collection_mu_i <- lapply(phi, function(x) x$mu[1:P])
+    collection_mu_i2 <- lapply(collection_mu_i, function(x) x^2)
+    sum_mu_i <- Reduce("+", collection_mu_i)
+    sum_mu_i2 <- Reduce("+", collection_mu_i2)
+    collection_diag_Sigma_i <- lapply(phi, function(x) diag(x$Sigma)[1:P])
+    sum_diag_Sigma_i <- Reduce("+", collection_diag_Sigma_i)
+
+    a <- rep(G / 2 + a_beta, P)
+    b <- b_beta + (sum_mu_i2 + sum_diag_Sigma_i -
+                     2 * M * sum_mu_i + G * M^2 + G * diag(R)) / 2
+  }
 
   a <- G * P / 2 + a_beta
   b <- b_beta + (sum(sum_mu_i2) + sum(sum_diag_Sigma_i) -
@@ -155,7 +183,7 @@ update_pi_i <- function(data, pars, i) {
   }
 
   #return variational mean
-  max(min(pi, 1 - 1e-10), 1e-6)
+  max(min(pi, 1 - 1e-10), 1e-8)
 
 }
 

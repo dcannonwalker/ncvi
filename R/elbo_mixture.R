@@ -21,9 +21,18 @@ elbo_extra_mixture <- function(data, pars, priors = NULL) {
     precision_mu0 * sum(M^2) / 2
 
   if (!is.null(priors)) {
-    extra <- extra + (priors$a_beta - list_beta$a) *
-      (digamma(list_beta$a) - log(list_beta$b)) +
-      (priors$b_beta - list_beta$b) * list_beta$mean
+    if (length(pars$theta$precision_beta) == 1) {
+      extra <- extra + (priors$a_beta - list_beta$a) *
+        (digamma(list_beta$a) - log(list_beta$b)) +
+        (priors$b_beta - list_beta$b) * list_beta$mean
+    }
+
+    else if (length(pars$theta$precision_beta) == data$P) {
+      extra <- extra + sum((priors$a_beta - list_beta$a) *
+        (digamma(list_beta$a) - log(list_beta$b)) +
+        (priors$b_beta - list_beta$b) * list_beta$mean)
+    }
+
 
     if (U != 0) {
         extra <- extra + (priors$a_u - list_u$a) *
