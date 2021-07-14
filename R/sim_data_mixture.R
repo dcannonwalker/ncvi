@@ -127,6 +127,11 @@ sim_data_mixture <- function(settings) {
   }
 
   eta <- c(apply(phi, 1, function(p) C %*% p))
+  if (!is.null(settings$checkSmall)) {
+    if (settings$checkSmall == T) {
+      eta[eta < 0] <- 0
+    }
+  }
   if (is.null(settings$family)) {
     y_vector = rpois(N * G, lambda = exp(eta))
   }
