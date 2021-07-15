@@ -298,6 +298,7 @@ sim_data_mixture <- function(settings) {
                      a_u = priors$a_u,
                      b_beta = priors$b_beta,
                      b_u = priors$b_u,
+                     pi0 = pi0,
                      Ip = diag(P),
                      Iu = diag(U),
                      P = P,
@@ -305,9 +306,20 @@ sim_data_mixture <- function(settings) {
                      precision_0 = diag(rep(precision_mu0, P)),
                      mu_0 = rep(0, P))
 
+  Trt <- factor(rep(c(0, 1), each = N / 2))
+  Prp <- factor(rep(c(0, 1, 0, 1), times = N / 4))
+  Blk <- factor(rep(1:U, each = N / U))
+  design <- model.matrix(~Trt+Prp+Trt:Prp)
+  y_df <- y |> list2DF() |> data.table::transpose()
+
+  data_edgeR <- list(counts = y_df,
+                     group = Trt,
+                     design = design)
+
   list(data = data_ncvi, init = init_ncvi, data_stan = data_stan,
        data_jags = data_jags,
        data_jagsM = data_jagsM,
+       data_edgeR = data_edgeR,
        seed = seed,
        truepars = truepars_ncvi,
        true_init = truepars_init,
