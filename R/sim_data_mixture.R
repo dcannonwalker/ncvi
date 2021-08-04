@@ -199,7 +199,7 @@ sim_data_mixture <- function(settings) {
   temp_Sigma <- MASS::ginv(true_theta$Tau)
   true_phi <- list()
   for (i in seq(1, G)) {
-    true_phi[[i]] <- list(mu = c(beta[i, ], rep(0, U)),
+    true_phi[[i]] <- list(mu = c(beta[i, ], u[i, ]),
                      Sigma = temp_Sigma)
   }
 
@@ -310,11 +310,13 @@ sim_data_mixture <- function(settings) {
   Prp <- factor(rep(c(0, 1, 0, 1), times = N / 4))
   Blk <- factor(rep(1:U, each = N / U))
   design <- model.matrix(~Trt+Prp+Trt:Prp)
+  design.re <- model.matrix(~Trt+Prp+Trt:Prp+Blk)
   y_df <- y |> list2DF() |> data.table::transpose()
 
   data_edgeR <- list(counts = y_df,
                      group = Trt,
-                     design = design)
+                     design = design,
+                     design.re = design.re)
 
   list(data = data_ncvi, init = init_ncvi, data_stan = data_stan,
        data_jags = data_jags,

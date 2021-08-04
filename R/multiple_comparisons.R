@@ -32,7 +32,7 @@ fpr <- function(p, true_null) {
   })
 }
 
-get_all_multiple_comparisons <- function(p, true_null,
+get_all_multiple_comparisons <- function(p, true_null, padj = NULL,
                                          method = NULL) {
   if (is.null(method)) {
     list(
@@ -46,7 +46,7 @@ get_all_multiple_comparisons <- function(p, true_null,
   else if (method == "edgeR") {
     list(
       p = p[order(p)],
-      fdr = p[order(p)],
+      fdr = padj[order(p)],
       tfdr = tfdr(p, true_null),
       tpr = tpr(p, true_null),
       fpr = fpr(p, true_null)
