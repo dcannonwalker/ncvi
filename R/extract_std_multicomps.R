@@ -1,5 +1,6 @@
 extract_std_multicomps <- function(fit, true_null, method, alpha, tfdr = T) {
   padj <- NULL
+  gene <- NULL
   if (is.null(method)) message("method required")
 
   else if (method == "ncvi") {
@@ -20,9 +21,17 @@ extract_std_multicomps <- function(fit, true_null, method, alpha, tfdr = T) {
     p <- fit$p
     padj <- fit$padj
   }
-  if (method != "edgeR") method <- NULL
+
+  else if (method == "xtail") {
+    p <- fit$p
+    padj <- fit$padj
+    gene <- fit$gene
+  }
+
+  if (method != "edgeR" & method != "xtail") method <- NULL
   mult <- get_all_multiple_comparisons(p, true_null, padj = padj,
-                                       method = method)
+                                       method = method,
+                                       gene = gene)
   if (tfdr == T) {
     standardize_multicomps(mult$fdr, mult$tfdr, alpha)
   }

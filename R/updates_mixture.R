@@ -183,5 +183,7 @@ update_pi_i <- function(data, pars, i) {
 
 }
 
+update_pi0 <- function(data, pars) {
 
+}
 
