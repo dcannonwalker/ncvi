@@ -19,27 +19,41 @@ fit_baySeq <- function(data_baySeq, options = NULL) {
        true_null = data_baySeq$true_null)
 }
 
-fit_baySeqRibo <- function(data_baySeq, options = NULL, ncl = 2) {
+fit_baySeqRibo <- function(data_baySeq, options = NULL, ncl = 2,
+                           replicates = NULL, groups = NULL,
+                           annotation = NULL, dim = NULL) {
   cl = parallel::makeCluster(ncl)
 
   on.exit(parallel::stopCluster(cl))
-
-  CD <- new("countData", data = array(c(data_baySeq$counts[, 1:8],
-                                        data_baySeq$counts[, 9:16]),
-                                      dim = c(nrow(data_baySeq$counts),
-                                                   8, 2)),
-                                      replicates = c(1, 1, 1, 1,
-                                                     2, 2, 2, 2),
-                                      groups = list(NDE = rep(1, 8),
-                                                    DE = rep(c(1, 2),
-                                                             each = 4)),
+  if(is.null(dim)) {
+    dim <- c(nrow(data_baySeq$counts), 8, 2)
+  }
+  if(is.null(replicates)) {
+    replicates = c(1, 1, 1, 1,
+                   2, 2, 2, 2)
+  }
+  if(is.null(groups)) {
+    groups = list(NDE = rep(1, 8),
+                  DE = rep(c(1, 2),
+                           each = 4))
+  }
+  CD <- new("countData", data =
+              array(c(data_baySeq$counts[, 1:dim[2]],
+                      data_baySeq$counts[, (dim[2] + 1):
+                                           ncol(data_baySeq$counts)]),
+                                      dim = dim),
+            replicates = replicates,
+            groups = groups,
             densityFunction = bbDensity)
 
   baySeq::libsizes(CD) <- baySeq::getLibsizes(CD)
 
-  CD@annotation <- data.frame(name = paste("count",
-                                           1:nrow(data_baySeq$counts),
-                                           sep = "_"))
+  if(is.null(annotation)) {
+    annotation <- data.frame(name = paste("count",
+                                          1:nrow(data_baySeq$counts),
+                                          sep = "_"))
+  }
+  CD@annotation <- annotation
 
   CD <- baySeq::getPriors(CD, samplesize = options$samplesize,
                           cl = cl)
@@ -48,11 +62,9 @@ fit_baySeqRibo <- function(data_baySeq, options = NULL, ncl = 2) {
                                nullData = TRUE,
                                cl = cl)
 
-  named_p <- baySeq::topCounts(CD, group = "NDE",
+  named_p <- baySeq::topCounts(CD, group = "DE",
                                number = nrow(data_baySeq$counts)) %>%
-    tidyr::separate(name, into = c(NA, "name"), convert = T) %>%
-    dplyr::arrange(name) %>%
-    dplyr::select(name, likes)
+    dplyr::select(colnames(annotation)[1], likes)
 
   list(fit = CD, named_p = named_p, p = named_p$likes, type_str = "baySeq")
 

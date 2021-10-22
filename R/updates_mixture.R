@@ -179,7 +179,7 @@ update_pi_i <- function(data, pars, i) {
   }
 
   #return variational mean
-  max(min(pi, 1 - 1e-10), 1e-8)
+  max(min(pi, 1 - 1e-10), 1e-15)
 
 }
 

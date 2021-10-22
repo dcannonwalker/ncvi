@@ -1,9 +1,15 @@
-bfdr <- function(post_prob) {
+bfdr <- function(post_prob, return.names = F) {
   p <- sort(post_prob, decreasing = F)
   n <- 1:length(p)
-  sapply(n, function(x) {
+  bfdr <- sapply(n, function(x) {
     sum(p[1:x]) / x
   })
+  if(return.names) {
+    names <- 1:length(post_prob)
+    names <- names[order(post_prob)]
+    cbind(bfdr, names)
+  }
+  else bfdr
 }
 
 tfdr <- function(p, true_null) {
