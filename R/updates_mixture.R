@@ -36,6 +36,12 @@ update_theta_mixture <- function(data, pars, priors) {
                         rep(theta$precision_u, data$U)))
     }
 
+    if (!is.null(priors$list_pi0)) {
+      list_pi0 <- update_pi0(data, pars, priors)
+      theta$pi0 <- c(list_pi0$mean)
+      theta$list_pi0 <- list_pi0
+    }
+
   }
 
   theta
@@ -183,7 +189,12 @@ update_pi_i <- function(data, pars, i) {
 
 }
 
-update_pi0 <- function(data, pars) {
-
+update_pi0 <- function(data, pars, priors) {
+  pi <- pars$pi
+  list_pi0 <- priors$list_pi0
+  a <- sum(pi) + list_pi0$a
+  b <- sum(1 - pi) + list_pi0$b
+  mean = a / (a + b)
+  list(a = a, b = b, mean = mean)
 }
 

@@ -3,7 +3,7 @@ extract_std_multicomps <- function(fit, true_null, method, alpha, tfdr = T) {
   gene <- NULL
   if (is.null(method)) message("method required")
 
-  else if (method == "ncvi") {
+  else if (method == "ncvi" | method == "ncvi_pi0") {
     p <- fit$pars$pi
   }
 

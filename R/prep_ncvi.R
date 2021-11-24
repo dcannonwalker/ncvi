@@ -35,7 +35,7 @@ prep_ncvi <- function(counts, X, Z) {
     u.prec = 1 # needs improvement
     Tau <- diag(c(beta.prec, rep(u.prec, U)))
     a.beta <- beta.prec * 10
-    b.beta <- 10
+    b.beta <- rep(10, length(beta.prec))
     list_beta <- list(mean = beta.prec, a = a.beta,
                            b = b.beta)
     list_u <- list(mean = u.prec, a = 2, b = 2) # needs improvement
