@@ -88,6 +88,7 @@ sim_data_mixture <- function(settings) {
 
   # set value if pi0 is fixed / given
   if (is.null(settings$priors$pi0)) pi0 <- settings$pi0
+  else pi0 <- settings$priors$pi0
 
   ## simulate mu0, unless mu0 is provided
   if (is.null(settings$mu0)) {

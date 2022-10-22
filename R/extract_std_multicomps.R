@@ -14,7 +14,8 @@ extract_std_multicomps <- function(fit, true_null, method, alpha, tfdr = T) {
   }
 
   else if (method == "baySeq") {
-    p <- fit$p
+    named_likes = fit$named_likes
+    p = 1 - fit$likes[order(as.numeric(rownames(named_likes)))]
   }
 
   else if (method == "edgeR") {

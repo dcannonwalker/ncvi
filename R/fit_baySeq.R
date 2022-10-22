@@ -19,7 +19,10 @@ fit_baySeq <- function(data_baySeq, options = NULL) {
        true_null = data_baySeq$true_null)
 }
 
-fit_baySeqRibo <- function(data_baySeq, options = NULL, ncl = 2,
+fit_baySeqRibo <- function(data_baySeq,
+                           pair_structure = list(mrna = 2 * 1:8,
+                                                 ribo = 2 * 1:8 - 1),
+                           options = NULL, ncl = 2,
                            replicates = NULL, groups = NULL,
                            annotation = NULL, dim = NULL) {
   cl = parallel::makeCluster(ncl)
@@ -38,9 +41,8 @@ fit_baySeqRibo <- function(data_baySeq, options = NULL, ncl = 2,
                            each = 4))
   }
   CD <- new("countData", data =
-              array(c(data_baySeq$counts[, 1:dim[2]],
-                      data_baySeq$counts[, (dim[2] + 1):
-                                           ncol(data_baySeq$counts)]),
+              array(c(data_baySeq$counts[, pair_structure$mrna],
+                      data_baySeq$counts[, pair_structure$ribo]),
                                       dim = dim),
             replicates = replicates,
             groups = groups,
@@ -62,11 +64,12 @@ fit_baySeqRibo <- function(data_baySeq, options = NULL, ncl = 2,
                                nullData = TRUE,
                                cl = cl)
 
-  named_p <- baySeq::topCounts(CD, group = "DE",
+  named_likes <- baySeq::topCounts(CD, group = "DE",
                                number = nrow(data_baySeq$counts)) %>%
     dplyr::select(colnames(annotation)[1], likes)
 
-  list(fit = CD, named_p = named_p, p = named_p$likes, type_str = "baySeq")
+  list(fit = CD, named_likes = named_likes, likes = named_likes$likes,
+       type_str = "baySeq")
 
 }
 
