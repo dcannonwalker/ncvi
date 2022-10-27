@@ -179,13 +179,23 @@ update_pi_i <- function(data, pars, i) {
   B1 <- log(1 - pi0) + t(y) %*% C %*% mu -
     sum(exp(A1))
 
+  if(is.nan(B1 - B0)) {
+    A0 <- Rmpfr::mpfr(C0 %*% mu  +
+                        0.5 * diag(C0 %*% Sigma %*% t(C0)), 10)
+    A1 <- Rmpfr::mpfr(C %*% mu  + 0.5 * diag(C %*% Sigma %*% t(C)), 10)
+    B0 <- log(pi0) + t(y) %*% C0 %*% mu -
+      sum(exp(A0))
+    B1 <- log(1 - pi0) + t(y) %*% C %*% mu -
+      sum(exp(A1))
+  }
+
   pi <- c((exp(B1 - B0) + 1)^-1)
   if (is.nan(pi)) {
     message("pi is nan", i)
   }
 
   #return variational mean
-  max(min(pi, 1 - 1e-10), 1e-15)
+  Rmpfr::asNumeric(max(min(pi, 1 - 1e-10), 1e-15))
 
 }
 

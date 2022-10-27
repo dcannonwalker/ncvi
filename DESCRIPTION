@@ -17,10 +17,11 @@ RoxygenNote: 7.1.2
 URL: https://github.com/dcannonwalker/ncvi/
 BugReports: https://github.com/dcannonwalker/ncvi/issues
 Imports: 
-  MASS,
-  mvtnorm,
-  tidyr,
-  dplyr
+    MASS,
+    mvtnorm,
+    tidyr,
+    dplyr,
+    Rmpfr
 Suggests: 
     knitr,
     rmarkdown,
