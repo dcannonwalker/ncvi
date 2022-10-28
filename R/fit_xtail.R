@@ -4,7 +4,7 @@
 #' @param sim output of `sim_data_mixture()`
 #' @return list with RPF and mRNA data frames and
 #' vector of treatment conditions
-make_xtail_data <- function(sim) {
+prep_xtail <- function(sim) {
 
   y_df <- sim$data$y |> list2DF() |> data.table::transpose()
   rpf <- y_df[, 2 * (0:(nrow(sim$data$C) / 2 - 1)) + 1]
@@ -22,19 +22,19 @@ make_xtail_data <- function(sim) {
 }
 
 #' Function to fit `xtail` model to paired RiboSeq and RNA count data
-#' @param xtail_data list with `rpf` and `mrna` data frames and
+#' @param data_xtail list with `rpf` and `mrna` data frames and
 #' character vector `condition` of treatment conditions
 #' @param bins `bins` argument for `xtail()`
 #' @param threads `threads` argument for `xtail()`
 #' @param normalize `normalize` argument for `xtail()`
 #' @return `xtail` fit object
-fit_xtail <- function(xtail_data, bins, threads = 2,
+fit_xtail <- function(data_xtail, bins, threads = 2,
                       normalize = T,
                       minMeanCount = 1) {
 
-  results <- xtail::xtail(xtail_data$mrna,
-                          xtail_data$rpf,
-                          xtail_data$condition,
+  results <- xtail::xtail(data_xtail$mrna,
+                          data_xtail$rpf,
+                          data_xtail$condition,
                           bins = bins,
                           threads = threads,
                           normalize = normalize,

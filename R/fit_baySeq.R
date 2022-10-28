@@ -1,81 +1,33 @@
-#' This function may be unnecessary
-make_baySeq_data <- function()
-fit_baySeq <- function(data_baySeq, options = NULL) {
-  # this requires baySeq to be loaded
-  CD <- new("countData", data = data_baySeq$data,
-            replicates = data_baySeq$replicates,
-            groups = data_baySeq$groups)
-  baySeq::libsizes(CD) <- baySeq::getLibsizes(CD)
-  CD@annotation <- data.frame(name = paste("count",
-                                           1:data_baySeq$G, sep = "_"))
-  CD <- baySeq::getPriors.NB(CD, samplesize = options$samplesize,
-                             estimation = "QL", cl = cl)
-  CD <- baySeq::getLikelihoods(CD, cl = cl, bootStraps = 3)
-  named_p <- baySeq::topCounts(CD, group = "NDE", number = data_baySeq$G) %>%
-    tidyr::separate(name, into = c(NA, "name"), convert = T) %>%
-    dplyr::arrange(name) %>%
-    dplyr::select(name, likes)
-  list(fit = CD, named_p = named_p, p = named_p$likes, type_str = "baySeq",
-       true_null = data_baySeq$true_null)
+#' Expects samples to be organized as Ribo (ctrl, trt), RNA (ctrl, trt)
+prep_bayseq <- function(data_edgeR) {
+  N <- nrow(data_edgeR$design)
+  counts <- as.matrix(data_edgeR$counts)
+  dim = c(nrow(counts), N / 2, 2)
+  replicates = rep(c(1, 2), N / 4)
+  groups = list(NDE = rep(1, N / 2),
+                DE = rep(c(1, 2), each = N / 4))
+  options <- list(samplesize = 1000)
+  bayseq_array <- array(c(counts[, 1:(N / 2)], counts[, (N / 2 + 1):N]), dim = dim)
+
+  data_bayseq <- new("countData", data = bayseq_array,
+                     replicates = replicates,
+                     groups = groups,
+                     densityFunction = bbDensity)
+
+  libsizes(data_bayseq) <- getLibsizes(data_bayseq)
+  data_bayseq
 }
 
-fit_baySeqRibo <- function(data_baySeq,
-                           pair_structure = list(mrna = 2 * 1:8,
-                                                 ribo = 2 * 1:8 - 1),
-                           options = NULL, ncl = 2,
-                           replicates = NULL, groups = NULL,
-                           annotation = NULL, dim = NULL) {
+fit_bayseq <- function(data_bayseq, ncl) {
+  G <- nrow(data_bayseq@data)
   cl = parallel::makeCluster(ncl)
-
-  on.exit(parallel::stopCluster(cl))
-  if(is.null(dim)) {
-    dim <- c(nrow(data_baySeq$counts), 8, 2)
-  }
-  if(is.null(replicates)) {
-    replicates = c(1, 1, 1, 1,
-                   2, 2, 2, 2)
-  }
-  if(is.null(groups)) {
-    groups = list(NDE = rep(1, 8),
-                  DE = rep(c(1, 2),
-                           each = 4))
-  }
-  CD <- new("countData", data =
-              array(c(data_baySeq$counts[, pair_structure$mrna],
-                      data_baySeq$counts[, pair_structure$ribo]),
-                                      dim = dim),
-            replicates = replicates,
-            groups = groups,
-            densityFunction = bbDensity)
-
-  baySeq::libsizes(CD) <- baySeq::getLibsizes(CD)
-
-  if(is.null(annotation)) {
-    annotation <- data.frame(name = paste("count",
-                                          1:nrow(data_baySeq$counts),
-                                          sep = "_"))
-  }
-  CD@annotation <- annotation
-
-  CD <- baySeq::getPriors(CD, samplesize = options$samplesize,
-                          cl = cl)
-
-  CD <- baySeq::getLikelihoods(CD, pET = 'BIC',
-                               nullData = TRUE,
-                               cl = cl)
-
-  named_likes <- baySeq::topCounts(CD, group = "DE",
-                               number = nrow(data_baySeq$counts)) %>%
-    dplyr::select(colnames(annotation)[1], likes)
-
-  list(fit = CD, named_likes = named_likes, likes = named_likes$likes,
-       type_str = "baySeq")
-
+  data_bayseq <- baySeq::getPriors(data_bayseq, samplesize = 1000, cl = cl)
+  data_bayseq <- baySeq::getLikelihoods(data_bayseq, pET = "BIC", cl = cl)
+  parallel::stopCluster(cl)
+  # look at results --------------------------------------------------------
+  data_bayseq@annotation <- data.frame(name = paste("count",
+                                                    1:G,
+                                                    sep = "_"))
+  list(tC = baySeq::topCounts(data_bayseq, number = G, group = "DE"),
+       data_bayseq = data_bayseq)
 }
-
-# replicates <- as.factor(rep(c("A1", "A2", "B1", "B2"), each = 2))
-# NDE <- factor(rep(1, 8))
-# trt <- c(rep("A", 4), rep("B", 4))
-# prot <- c(rep(c("ribo", "rna"), 4))
-# trsl <- rep(c("A", "B", "C", "D"), each = 2)
-# groups <- list(NDE = NDE, trt = trt, prot = prot, trsl = trsl)

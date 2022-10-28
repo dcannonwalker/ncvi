@@ -227,7 +227,7 @@ sim_data_mixture <- function(settings) {
                    G = G,
                    P = P,
                    U = U,
-                   y_vector = y_vector)
+                   min_pi = settings$min_pi)
 
 
 
@@ -307,17 +307,16 @@ sim_data_mixture <- function(settings) {
                      precision_0 = diag(rep(precision_mu0, P)),
                      mu_0 = rep(0, P))
 
-  Trt <- factor(rep(c(0, 1), each = N / 2))
-  Prp <- factor(rep(c(0, 1, 0, 1), times = N / 4))
-  Blk <- factor(rep(1:U, each = N / U))
-  design <- model.matrix(~Trt+Prp+Trt:Prp)
-  design.re <- model.matrix(~Trt+Prp+Trt:Prp+Blk)
+  preparation <- rep(c(0, 1), each = N / 2)
+  treatment <- rep(rep(c(0, 1), each = N / 4), 2)
+  sample <- factor(rep(1:(N / 2), 2))
+  design <- model.matrix(~treatment + preparation + preparation:treatment +
+                           sample)
+  design <- design[, c(1:(3 + N / 2 - 2), ncol(design))]
   y_df <- y |> list2DF() |> data.table::transpose()
-
   data_edgeR <- list(counts = y_df,
-                     group = Trt,
-                     design = design,
-                     design.re = design.re)
+                     group = treatment,
+                     design = design)
 
   list(data = data_ncvi, init = init_ncvi, data_stan = data_stan,
        data_jags = data_jags,

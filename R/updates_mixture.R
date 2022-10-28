@@ -14,9 +14,18 @@ update_pars_mixture <- function(data, pars, args) {
 update_theta_mixture <- function(data, pars, priors) {
   theta <- pars$theta
   U <- data$U
+
+  # exclude problem phi_i
+  pars$phi <- pars$phi[which(sapply(pars$phi, function(p) length(p) > 1))]
+  data$G <- length(pars$phi)
+
   pars_mu0 <- conjugate_update_mvn_REH(data, pars)
   theta$M <- c(pars_mu0$M, rep(0, U))
   theta$R <- pars_mu0$R
+  # adjust for removed genes
+
+
+  # condition on which priors where given
   if (!is.null(priors)) {
     list_beta <- update_precision_beta_mixture(data, pars, priors)
     theta$list_beta <- list_beta
@@ -33,7 +42,7 @@ update_theta_mixture <- function(data, pars, priors) {
 
     else if (length(list_beta$mean) == data$P) {
       theta$Tau <- diag(c(theta$precision_beta,
-                        rep(theta$precision_u, data$U)))
+                          rep(theta$precision_u, data$U)))
     }
 
     if (!is.null(priors$list_pi0)) {
@@ -121,15 +130,28 @@ update_phi_mixture <- function(data, pars) {
   P <- data$P
 
   for (i in seq(1, G)) {
-
-    phi[[i]] <- nc_update_mvn(data = list(y = y[[i]], C = C, P = P),
-                              pars = list(phi = phi[[i]], theta = theta,
-                                          pi = pi[[i]]),
-                              differentials = list(
-                                Sigma = d_mvn_cov_mixture,
-                                mu = d_mvn_mean_mixture
-                              ))
-
+    if(length(phi[[i]]) > 1) {
+      problem_phii <- TRUE
+      tryCatch(
+        error = function(cnd) {
+          message(paste0("Problem for phi ", i))
+        },
+        expr = {
+          phi[[i]] <- nc_update_mvn(data = list(y = y[[i]], C = C, P = P),
+                                    pars = list(phi = phi[[i]],
+                                                theta = theta,
+                                                pi = pi[[i]]),
+                                    differentials = list(
+                                      Sigma = d_mvn_cov_mixture,
+                                      mu = d_mvn_mean_mixture
+                                    ), i = i)
+          problem_phii <- FALSE
+        }
+      )
+      if(problem_phii) {
+        phi[[i]] <- NA
+      }
+    }
   }
 
   # return phi
@@ -148,10 +170,14 @@ update_pi <- function(data, pars) {
   P <- data$P
 
   for (i in seq(1, G)) {
+    if(length(phi[[i]]) == 1) pi[[i]] <- NA
 
-    pi[[i]] <- update_pi_i(data = list(y = y[[i]], C = C, P = P),
-                           pars = list(phi = phi[[i]], theta = theta),
-                           i = i)
+    else {
+      pi[[i]] <- update_pi_i(data = list(y = y[[i]], C = C, P = P,
+                                         min_pi = data$min_pi),
+                             pars = list(phi = phi[[i]], theta = theta),
+                             i = i)
+    }
 
   }
 
@@ -161,6 +187,7 @@ update_pi <- function(data, pars) {
 
 update_pi_i <- function(data, pars, i) {
 
+  min_pi <- data$min_pi
   mu <- pars$phi$mu
   Sigma <- pars$phi$Sigma
   y <- data$y
@@ -195,7 +222,7 @@ update_pi_i <- function(data, pars, i) {
   }
 
   #return variational mean
-  Rmpfr::asNumeric(max(min(pi, 1 - 1e-10), 1e-15))
+  Rmpfr::asNumeric(max(min(pi, 1 - min_pi), min_pi))
 
 }
 

@@ -91,6 +91,10 @@ contribution_pi_i <- function(pi, pi0) {
 #' @export
 elbo_mixture <- function(data, pars, old_elbo = NULL, priors = NULL) {
 
+  # exclude problem phi_i
+  pars$phi <- pars$phi[which(sapply(pars$phi, function(p) length(p) > 1))]
+  data$G <- length(pars$phi)
+
   phi <- pars$phi
   theta <- pars$theta
   pi <- pars$pi

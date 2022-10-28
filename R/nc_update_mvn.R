@@ -8,11 +8,13 @@
 #' @param differentials List of differentials functions, should have
 #' 'mu' and 'Sigma'
 #' @export
-nc_update_mvn <- function(data, pars, differentials) {
-  Sigma <- MASS::ginv(
-    -2 * differentials$Sigma(data, pars)
+nc_update_mvn <- function(data, pars, differentials, i) {
+  Sigma <-
+    MASS::ginv(
+      -2 * differentials$Sigma(data, pars)
     )
   pars$phi$Sigma <- Sigma
   mu <- c(pars$phi$mu + Sigma %*% differentials$mu(data, pars))
+
   list(mu = mu, Sigma = Sigma)
 }

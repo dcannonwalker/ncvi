@@ -27,13 +27,14 @@
 #   list(partFit = y, tests = tests, p = p, padj = padj)
 # }
 
-fit_edgeRribo <- function(data_edgeR, design.re) {
+fit_edgeRribo <- function(data_edgeR) {
+  design = data_edgeR$design
   y <- edgeR::DGEList(counts = data_edgeR$counts,
                       group = data_edgeR$group)
   y <- edgeR::calcNormFactors(y)
-  y <- edgeR::estimateDisp(y, design = design.re)
-  fit <- edgeR::glmQLFit(y, design = design.re)
-  test <- edgeR::glmQLFTest(fit, coef = ncol(design.re))
+  y <- edgeR::estimateDisp(y, design = design)
+  fit <- edgeR::glmQLFit(y, design = design)
+  test <- edgeR::glmQLFTest(fit, coef = ncol(design))
 
   list(table = test$table, p = test$table$PValue,
        padj = p.adjust(test$table$PValue, method = "BH"))
