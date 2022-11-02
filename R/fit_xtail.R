@@ -1,23 +1,28 @@
 #' Function to take the simulated data set and format it
 #' as required for `xtail`
 #'
-#' @param sim output of `sim_data_mixture()`
+#' @param data_edgeR output element of `sim_data_mixture()`
 #' @return list with RPF and mRNA data frames and
 #' vector of treatment conditions
-prep_xtail <- function(sim) {
+prep_xtail <- function(data_edgeR) {
 
-  y_df <- sim$data$y |> list2DF() |> data.table::transpose()
-  rpf <- y_df[, 2 * (0:(nrow(sim$data$C) / 2 - 1)) + 1]
-  mrna <- y_df[, 2 * (1:(nrow(sim$data$C) / 2))]
 
-  condition <- c(rep("control", nrow(sim$data$C) / 4),
-                 rep("treatment", nrow(sim$data$C) / 4))
-  colnames(rpf) <- c(paste0("control", 1:(nrow(sim$data$C) / 4)),
-                      paste0("trt", 1:(nrow(sim$data$C) / 4)))
-  colnames(mrna) <- c(paste0("control", 1:(nrow(sim$data$C) / 4)),
-                     paste0("trt", 1:(nrow(sim$data$C) / 4)))
+  counts <- data_edgeR$counts
+  design <- data_edgeR$design
+  N <- nrow(design)
+  Data_Type <- factor(design[, 'preparation'],
+                      labels = c("Ribo", "RNA"))
+  Conditions <- factor(design[, 'treatment'],
+                       labels = c("Control", "Treatment"))[1:(N / 2)]
+  Replicates <- rep(c(1:(N / 4)), 2)
+  Samples  <- paste(Conditions, Replicates, sep = "")
+  mrna <- counts[, Data_Type == "RNA"]
+  rpf <- counts[, Data_Type == "Ribo"]
+  colnames(mrna) <- colnames(rpf) <- Samples
 
-  list(rpf = rpf, mrna = mrna, condition = condition)
+
+  list(rpf = rpf, mrna = mrna, condition = as.character(Conditions),
+       Conditions = Conditions)
 
 }
 

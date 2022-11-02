@@ -27,7 +27,8 @@ fit_ncvi <- function(data, init,
                  options = list(max_iter = 100,
                                 elbo_delta = 0.0001,
                                 verbose = T,
-                                fixed_iter = F),
+                                fixed_iter = F,
+                                short_out = FALSE),
                  ...) {
 
   args <- list(...)
@@ -98,9 +99,16 @@ fit_ncvi <- function(data, init,
     }
   }
 
-  list(pars = pars,
-       maxL_pars = maxL_pars,
-       data = data,
-       L = L)
+  if(options$short_out) {
+    list(beta = t(sapply(pars$phi, function(p) p$mu[1:4])),
+         pi = pars$pi)
+  }
+
+  else {
+    list(pars = pars,
+         maxL_pars = maxL_pars,
+         data = data,
+         L = L)
+  }
 
 }
