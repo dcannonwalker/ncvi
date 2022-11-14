@@ -34,21 +34,21 @@ prep_ncvi2 <- function(counts, S, X, Z) {
 
   # Incorporate or calculate normalization factors
   if(missing(S)) {
-    y <- DGEList(counts = counts[, 2:(N + 1)],
+    y <- edgeR::DGEList(counts = counts[, 2:(N + 1)],
                  group = group)
-    y <- calcNormFactors(y)
+    y <- edgeR::calcNormFactors(y)
     S <- y$samples$norm.factors
   }
-  else y <- DGEList(counts = counts[, 2:(N + 1)],
+  else y <- edgeR::DGEList(counts = counts[, 2:(N + 1)],
                     group = group,
                     norm.factors = S)
   data$S <- S
 
   # Estimate coefficients
   y <-
-    estimateDisp(y, design = design)
+    edgeR::estimateDisp(y, design = design)
   edger_fit <-
-    glmQLFit(y, design = design)
+    edgeR::glmQLFit(y, design = design)
   coefs <- edger_fit$coefficients
   beta <- coefs[, c('(Intercept)', 'treatment',
                     'preparation', 'treatment:preparation')]
