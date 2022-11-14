@@ -4,13 +4,16 @@
 \alias{prep_ncvi}
 \title{Prepare list of objects required for \code{fit_ncvi()}}
 \usage{
-prep_ncvi(counts, X, Z)
+prep_ncvi(counts, S, X, Z)
 }
 \arguments{
 \item{counts}{Data frame of counts with first column the
 gene ID}
 
-\item{X}{Fixed effects design matrix}
+\item{S}{Vector of size factors with \code{length(S) = ncol(counts) - 1}}
+
+\item{X}{Fixed effects design matrix (expects preparation in column 2
+and treatment in column 3)}
 
 \item{Z}{Random effects design matrix}
 }
