@@ -52,10 +52,10 @@ prep_ncvi2 <- function(counts, S, X, Z) {
   coefs <- edger_fit$coefficients
   beta <- coefs[, c('(Intercept)', 'treatment',
                     'preparation', 'treatment:preparation')]
-  u <- c(coefs[, 4:(ncol(coefs) - 1)])
+  u <- coefs[, 4:(ncol(coefs) - 1)]
 
   beta_prec <- 1 / apply(beta, 2, var)
-  u_prec <- 1 / var(u)
+  u_prec <- 1 / var(c(u))
   beta_mean <- apply(beta, 2, mean)
 
   # * generate inits ----
