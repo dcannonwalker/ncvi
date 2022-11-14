@@ -20,7 +20,8 @@ filter_counts <- function(counts, group, options) {
 
     # add n0 and mean count columns
     long <- long %>% group_by(Geneid) %>%
-        mutate(n0 = sum(count == 0), mean_count = mean(count)) %>%
+        mutate(n0 = sum(count == 0), mean_count = mean(count),
+               min_count = min(count)) %>%
         group_by(Geneid, group) %>%
         mutate(n0_grp = sum(count == 0), mean_count_grp = mean(count))
 
@@ -36,12 +37,16 @@ filter_counts <- function(counts, group, options) {
     if (!is.null(options$mean_count_grp)) {
         long <- long %>% filter(mean_count_grp > options$mean_count_grp)
     }
+    if (!is.null(options$min_count)) {
+      long <- long %>% filter(min_count >= options$min_count)
+    }
 
     # returns to wide format and
     # drops genes that were only partially filtered by
     # one of the grp filtering options
     df <- long %>% ungroup() %>%
-        select(-n0, -mean_count, -group, -mean_count_grp, -n0_grp) %>%
+        select(-n0, -mean_count, -group,
+               -mean_count_grp, -n0_grp, -min_count) %>%
         pivot_wider(names_from = sample, values_from = count) %>% drop_na()
 
     df

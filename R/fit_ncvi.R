@@ -26,8 +26,8 @@ fit_ncvi <- function(data, init,
                  elbo,
                  options = list(max_iter = 100,
                                 elbo_delta = 0.0001,
-                                verbose = T,
-                                fixed_iter = F,
+                                verbose = TRUE,
+                                fixed_iter = FALSE,
                                 short_out = FALSE),
                  ...) {
 
@@ -43,7 +43,7 @@ fit_ncvi <- function(data, init,
       !is.null(L$elbo)) {
     maxL <- L$elbo
   }
-  if (options$fixed_iter == F) {
+  if (options$fixed_iter == FALSE) {
     while (iter < options$max_iter &&
            abs(L$delta) > options$elbo_delta) {
 
@@ -81,7 +81,7 @@ fit_ncvi <- function(data, init,
       }
 
 
-      if (options$verbose == T) print(data.frame(iter = iter,
+      if (options$verbose == TRUE) print(data.frame(iter = iter,
                                                  elbo = L$elbo,
                                                  delta = L$delta,
                                                  max_elbo = maxL))
@@ -89,7 +89,7 @@ fit_ncvi <- function(data, init,
     }
 
   }
-  else if (options$fixed_iter == T) {
+  else if (options$fixed_iter == TRUE) {
     while (iter < options$max_iter) {
 
       pars <- update_pars(data, pars, args)

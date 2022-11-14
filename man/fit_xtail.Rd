@@ -4,10 +4,10 @@
 \alias{fit_xtail}
 \title{Function to fit \code{xtail} model to paired RiboSeq and RNA count data}
 \usage{
-fit_xtail(xtail_data, bins, threads = 2, normalize = T, minMeanCount = 1)
+fit_xtail(data_xtail, bins, threads = 2, normalize = T, minMeanCount = 1)
 }
 \arguments{
-\item{xtail_data}{list with \code{rpf} and \code{mrna} data frames and
+\item{data_xtail}{list with \code{rpf} and \code{mrna} data frames and
 character vector \code{condition} of treatment conditions}
 
 \item{bins}{\code{bins} argument for \code{xtail()}}

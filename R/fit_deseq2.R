@@ -10,15 +10,26 @@ prep_deseq <- function(data_edgeR) {
                       labels = c("Ribo", "RNA"))
   Conditions <- factor(design[, 'treatment'],
                        labels = c("Control", "Treatment"))
-  Replicates <- rep(c(1, 2), N / 2)
+  Replicates <- rep(1:(N / 4), 4)
   Samples  <- paste(Data_Type, Conditions, Replicates, sep = "")
-  Bio_Replicate2 <- c(0, 1, rep(0, N / 2 - 2), 0, 1, rep(0, N / 2 - 2))
-  Bio_Replicate3 <- c(0, 0, 1, rep(0, N / 2 - 3), 0, 0, 1, rep(0, N / 2 - 3))
-  experiment <- data.frame(Data_Type, Conditions,
-                           Bio_Replicate2,
-                           Bio_Replicate3, row.names = Samples)
+  Bio_Replicate2 <- factor(c(0, 1, rep(0, N / 2 - 2), 0, 1, rep(0, N / 2 - 2)))
+  Bio_Replicates <- data.frame(Bio_Replicate2)
+  for (i in seq(3, (N / 2) - 1)) {
+    Bio_Replicates[, paste0("Bio_Replicate", i)] <-
+      factor(rep(c(rep(0, i - 1), 1, rep(0, N / 2 - i)), 2))
+  }
+  experiment <- data.frame(Data_Type,
+                           Bio_Replicates,
+                           Conditions,
+                           row.names = Samples)
   colnames(counts) <- Samples
-  list(experiment = experiment, counts = counts)
+  design_formula <- as.formula(paste("~ ", paste(
+    "Data_Type", "Conditions",
+    paste(paste0("Bio_Replicate", 2:(N / 2 - 1)), collapse = " + "),
+    "Data_Type:Conditions", sep = " + "
+  )))
+  list(experiment = experiment, counts = counts,
+       design_formula = design_formula)
 }
 
 #' Function to fit the `DESeq2` model to a RiboSeq experiment
@@ -30,11 +41,11 @@ prep_deseq <- function(data_edgeR) {
 fit_deseq <- function(data_deseq) {
   dds <- DESeq2::DESeqDataSetFromMatrix(countData = data_deseq$counts,
                                         colData = data_deseq$experiment,
-                                        design = ~ Conditions +
-                                          Data_Type + Conditions:Data_Type +
-                                          Bio_Replicate2 +
-                                          Bio_Replicate3,)
+                                        design = data_deseq$design_formula
+                                          )
   dds <- DESeq2::DESeq(dds)
-  res <- DESeq2::results(dds, name = "ConditionsTreatment.Data_TypeRNA")
+  res <- DESeq2::results(dds)
   list(dds = dds, res = res)
 }
+
+

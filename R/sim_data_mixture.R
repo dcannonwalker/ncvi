@@ -145,6 +145,11 @@ sim_data_mixture <- function(settings) {
       y_vector = rnbinom(N * G, mu = exp(eta),
                          size = 1 / dispersion)
     }
+    else if (settings$nbinom$est) {
+      dispersion <- sapply(beta[, 1], function(b) dispersion_est(b))
+      y_vector = rnbinom(N * G, mu = exp(eta),
+                         size = 1 / rep(dispersion, each = N))
+    }
     else if (!is.null(settings$nbinom$priors)) {
       shape <- settings$nbinom$priors$shape
       scale <- settings$nbinom$priors$scale

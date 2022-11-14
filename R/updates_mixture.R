@@ -98,7 +98,8 @@ update_precision_beta_mixture <- function(data, pars, priors) {
 
     a <- G * P / 2 + a_beta
     b <- b_beta + (sum(sum_mu_i2) + sum(sum_diag_Sigma_i) -
-                     2 * t(M) %*% sum_mu_i + G * sum(M^2) + G * sum(diag(R))) / 2
+                     2 * t(M) %*% sum_mu_i + G * sum(M^2) +
+                     G * sum(diag(R))) / 2
 
     list(mean = a / b, a = a, b = b)
   }
@@ -128,6 +129,8 @@ update_phi_mixture <- function(data, pars) {
   C <- data$C
   G <- data$G
   P <- data$P
+  if(is.null(data$S)) S <- 0
+  else S <- data$S
 
   for (i in seq(1, G)) {
     if(length(phi[[i]]) > 1) {
@@ -137,7 +140,8 @@ update_phi_mixture <- function(data, pars) {
           message(paste0("Problem for phi ", i))
         },
         expr = {
-          phi[[i]] <- nc_update_mvn(data = list(y = y[[i]], C = C, P = P),
+          phi[[i]] <- nc_update_mvn(data = list(y = y[[i]], S = S,
+                                                C = C, P = P),
                                     pars = list(phi = phi[[i]],
                                                 theta = theta,
                                                 pi = pi[[i]]),
@@ -148,9 +152,6 @@ update_phi_mixture <- function(data, pars) {
           problem_phii <- FALSE
         }
       )
-      if(problem_phii) {
-        phi[[i]] <- NA
-      }
     }
   }
 
@@ -168,16 +169,15 @@ update_pi <- function(data, pars) {
   C <- data$C
   G <- data$G
   P <- data$P
+  if(is.null(data$S)) S <- 0
+  else S <- data$S
 
   for (i in seq(1, G)) {
-    if(length(phi[[i]]) == 1) pi[[i]] <- NA
-
-    else {
-      pi[[i]] <- update_pi_i(data = list(y = y[[i]], C = C, P = P,
-                                         min_pi = data$min_pi),
-                             pars = list(phi = phi[[i]], theta = theta),
-                             i = i)
-    }
+    pi[[i]] <- update_pi_i(data = list(y = y[[i]], C = C, P = P,
+                                       S = S,
+                                       min_pi = data$min_pi),
+                           pars = list(phi = phi[[i]], theta = theta),
+                           i = i)
 
   }
 
@@ -193,26 +193,31 @@ update_pi_i <- function(data, pars, i) {
   y <- data$y
   P <- data$P
   C <- data$C
+  if(is.null(data$S)) S <- 0
+  else S <- data$S
+
   C0 <- C
   C0[, P] <- 0
 
   pi0 <- pars$theta$pi0
 
-  A0 <- C0 %*% mu  +
+  A0 <- C0 %*% mu  + S +
     0.5 * diag(C0 %*% Sigma %*% t(C0))
-  A1 <- C %*% mu  + 0.5 * diag(C %*% Sigma %*% t(C))
-  B0 <- log(pi0) + t(y) %*% C0 %*% mu -
+  A1 <- C %*% mu  + S +
+    0.5 * diag(C %*% Sigma %*% t(C))
+  B0 <- log(pi0) + t(y) %*% (C0 %*% mu + S) -
     sum(exp(A0))
-  B1 <- log(1 - pi0) + t(y) %*% C %*% mu -
+  B1 <- log(1 - pi0) + t(y) %*% (C %*% mu + S)-
     sum(exp(A1))
 
   if(is.nan(B1 - B0)) {
-    A0 <- Rmpfr::mpfr(C0 %*% mu  +
+    A0 <- Rmpfr::mpfr(C0 %*% mu + S +
                         0.5 * diag(C0 %*% Sigma %*% t(C0)), 10)
-    A1 <- Rmpfr::mpfr(C %*% mu  + 0.5 * diag(C %*% Sigma %*% t(C)), 10)
-    B0 <- log(pi0) + t(y) %*% C0 %*% mu -
+    A1 <- Rmpfr::mpfr(C %*% mu + S +
+                        0.5 * diag(C %*% Sigma %*% t(C)), 10)
+    B0 <- log(pi0) + t(y) %*% (C0 %*% mu + S) -
       sum(exp(A0))
-    B1 <- log(1 - pi0) + t(y) %*% C %*% mu -
+    B1 <- log(1 - pi0) + t(y) %*% (C %*% mu + S)-
       sum(exp(A1))
   }
 

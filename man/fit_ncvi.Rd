@@ -9,7 +9,8 @@ fit_ncvi(
   init,
   update_pars,
   elbo,
-  options = list(max_iter = 100, elbo_delta = 1e-04, verbose = T, fixed_iter = F),
+  options = list(max_iter = 100, elbo_delta = 1e-04, verbose = TRUE, fixed_iter = FALSE,
+    short_out = FALSE),
   ...
 )
 }

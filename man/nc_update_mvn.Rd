@@ -5,7 +5,7 @@
 \title{Non-conjugate update for the parameters of
 multivariate normal distribution.}
 \usage{
-nc_update_mvn(data, pars, differentials)
+nc_update_mvn(data, pars, differentials, i)
 }
 \arguments{
 \item{data}{List of observed and known variables passed down from the
