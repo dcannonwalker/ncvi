@@ -22,17 +22,18 @@
 #' @export
 
 fit_ncvi <- function(data, init,
-                 update_pars,
-                 elbo,
-                 options = list(max_iter = 100,
-                                elbo_delta = 0.0001,
-                                verbose = TRUE,
-                                fixed_iter = FALSE,
-                                short_out = FALSE),
-                 ...) {
+                     update_pars,
+                     elbo,
+                     options = list(max_iter = 100,
+                                    elbo_delta = 0.0001,
+                                    verbose = TRUE,
+                                    fixed_iter = FALSE,
+                                    short_out = FALSE),
+                     ...) {
 
   args <- list(...)
   pars = init
+  if(is.null(pars$problem_index)) pars$problem_index <- c()
   iter = 0
   L = elbo(data, pars, priors = args$priors)
   L$delta <- options$elbo_delta + 1
@@ -82,9 +83,9 @@ fit_ncvi <- function(data, init,
 
 
       if (options$verbose == TRUE) print(data.frame(iter = iter,
-                                                 elbo = L$elbo,
-                                                 delta = L$delta,
-                                                 max_elbo = maxL))
+                                                    elbo = L$elbo,
+                                                    delta = L$delta,
+                                                    max_elbo = maxL))
 
     }
 
@@ -105,10 +106,13 @@ fit_ncvi <- function(data, init,
   }
 
   else {
-    list(pars = pars,
-         maxL_pars = maxL_pars,
-         data = data,
-         L = L)
+    list(
+      beta = t(sapply(pars$phi, function(p) p$mu[1:4])),
+      pi = pars$pi,
+      pars = pars,
+      maxL_pars = maxL_pars,
+      data = data,
+      L = L)
   }
 
 }

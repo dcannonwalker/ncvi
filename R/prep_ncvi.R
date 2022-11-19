@@ -20,6 +20,14 @@ prep_ncvi <- function(counts, S, X, Z) {
   data <- list(y = y, G = length(y),
                C = cbind(X, Z), P = P, U = U)
 
+  # Incorporate or calculate normalization factors
+  if(missing(S)) {
+    edger_list <- edgeR::DGEList(counts = counts[, 2:(N + 1)],
+                                 group = group)
+    edger_list <- edgeR::calcNormFactors(edger_list)
+    S <- edger_list$samples$norm.factors
+  }
+  data$S <- -log(S)
   # * generate inits ----
   beta <- list()
   for (i in seq(1, length(y))) {

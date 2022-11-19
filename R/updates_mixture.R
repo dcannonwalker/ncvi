@@ -1,23 +1,36 @@
 update_pars_mixture <- function(data, pars, args) {
 
-  pars$phi <- update_phi_mixture(data, pars)
+  problem_index <- pars$problem_index
+  if(is.null(problem_index)) problem_index <- c()
 
-  pars$theta <- update_theta_mixture(data, pars, args$priors)
+  pars$phi <- update_phi_mixture(data, pars, problem_index)
 
-  pars$pi <- update_pi(data, pars)
+  problem_index <- pars$phi$problem_index
+  pars$phi <- pars$phi$phi
+
+  pars$theta <- update_theta_mixture(data, pars, args$priors,
+                                     problem_index)
+
+  pars$pi <- update_pi(data, pars, problem_index)
+
+  pars$problem_index <- problem_index
 
   pars
 }
 
 # can augment with precision updates
 
-update_theta_mixture <- function(data, pars, priors) {
+update_theta_mixture <- function(data, pars, priors, problem_index) {
   theta <- pars$theta
   U <- data$U
 
   # exclude problem phi_i
-  pars$phi <- pars$phi[which(sapply(pars$phi, function(p) length(p) > 1))]
-  data$G <- length(pars$phi)
+  if(length(problem_index) > 0) {
+    pars$phi <- pars$phi[-problem_index]
+    data$G <- length(pars$phi)
+    pars$pi <- pars$pi[-problem_index]
+
+  }
 
   pars_mu0 <- conjugate_update_mvn_REH(data, pars)
   theta$M <- c(pars_mu0$M, rep(0, U))
@@ -120,7 +133,7 @@ update_precision_beta_mixture <- function(data, pars, priors) {
   list(mean = a / b, a = a, b = b)
 }
 
-update_phi_mixture <- function(data, pars) {
+update_phi_mixture <- function(data, pars, problem_index) {
 
   phi <- pars$phi
   theta <- pars$theta
@@ -132,7 +145,11 @@ update_phi_mixture <- function(data, pars) {
   if(is.null(data$S)) S <- 0
   else S <- data$S
 
-  for (i in seq(1, G)) {
+  index <- seq(1, G)
+  if(length(problem_index) > 0) {
+    index <- index[-problem_index]
+  }
+  for (i in index) {
     if(length(phi[[i]]) > 1) {
       problem_phii <- TRUE
       tryCatch(
@@ -150,17 +167,19 @@ update_phi_mixture <- function(data, pars) {
                                       mu = d_mvn_mean_mixture
                                     ), i = i)
           problem_phii <- FALSE
+        }, finally = {
+          if(problem_phii) problem_index <- unique(c(problem_index, i))
         }
       )
     }
   }
 
   # return phi
-  phi
+  list(phi = phi, problem_index = problem_index)
 
 }
 
-update_pi <- function(data, pars) {
+update_pi <- function(data, pars, problem_index) {
 
   phi <- pars$phi
   theta <- pars$theta
@@ -172,7 +191,11 @@ update_pi <- function(data, pars) {
   if(is.null(data$S)) S <- 0
   else S <- data$S
 
-  for (i in seq(1, G)) {
+  index <- seq(1, G)
+  if(length(problem_index) > 0) {
+    index <- index[-problem_index]
+  }
+  for (i in index) {
     pi[[i]] <- update_pi_i(data = list(y = y[[i]], C = C, P = P,
                                        S = S,
                                        min_pi = data$min_pi),
@@ -224,6 +247,7 @@ update_pi_i <- function(data, pars, i) {
   pi <- c((exp(B1 - B0) + 1)^-1)
   if (is.nan(pi)) {
     message("pi is nan", i)
+    return(1)
   }
 
   #return variational mean

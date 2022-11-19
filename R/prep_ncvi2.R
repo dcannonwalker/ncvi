@@ -34,24 +34,25 @@ prep_ncvi2 <- function(counts, S, X, Z) {
 
   # Incorporate or calculate normalization factors
   if(missing(S)) {
-    y <- edgeR::DGEList(counts = counts[, 2:(N + 1)],
+    edger_list <- edgeR::DGEList(counts = counts[, 2:(N + 1)],
                  group = group)
-    y <- edgeR::calcNormFactors(y)
-    S <- y$samples$norm.factors
+    edger_list <- edgeR::calcNormFactors(edger_list)
+    S <- edger_list$samples$norm.factors
   }
-  else y <- edgeR::DGEList(counts = counts[, 2:(N + 1)],
+  else edger_list <- edgeR::DGEList(counts = counts[, 2:(N + 1)],
                     group = group,
                     norm.factors = S)
-  data$S <- S
+  data$S <- -log(S)
 
   # Estimate coefficients
-  y <-
-    edgeR::estimateDisp(y, design = design)
+  edger_list <-
+    edgeR::estimateDisp(edger_list, design = design)
   edger_fit <-
-    edgeR::glmQLFit(y, design = design)
+    edgeR::glmQLFit(edger_list, design = design)
   coefs <- edger_fit$coefficients
   beta <- coefs[, c('(Intercept)', 'treatment',
                     'preparation', 'treatment:preparation')]
+  beta[, '(Intercept)'] <- beta[, '(Intercept)'] + mean(edger_fit$offset)
   u <- coefs[, 4:(ncol(coefs) - 1)]
 
   beta_prec <- 1 / apply(beta, 2, var)
@@ -84,7 +85,7 @@ prep_ncvi2 <- function(counts, S, X, Z) {
   # * * init phi ----
   phi <- list()
 
-  for (i in seq(1, length(y))) {
+  for (i in seq(1, length(data$y))) {
     phi[[i]] <- list(
       mu = c(beta[i, ], 0, u[i, ], 0),
       Sigma = theta$Tau
@@ -92,7 +93,7 @@ prep_ncvi2 <- function(counts, S, X, Z) {
   }
 
   # * * init pi ----
-  pi <- rep(0.8, length(y))
+  pi <- rep(0.8, length(data$y))
 
   # * * collect inits ----
   init <- list(

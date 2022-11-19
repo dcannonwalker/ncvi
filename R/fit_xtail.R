@@ -4,10 +4,11 @@
 #' @param data_edgeR output element of `sim_data_mixture()`
 #' @return list with RPF and mRNA data frames and
 #' vector of treatment conditions
-prep_xtail <- function(data_edgeR) {
+prep_xtail <- function(data_edgeR, use_normed = FALSE) {
 
 
   counts <- data_edgeR$counts
+  if(use_normed) counts <- data_edgeR$norm_counts
   design <- data_edgeR$design
   N <- nrow(design)
   Data_Type <- factor(design[, 'preparation'],
@@ -19,6 +20,7 @@ prep_xtail <- function(data_edgeR) {
   mrna <- counts[, Data_Type == "RNA"]
   rpf <- counts[, Data_Type == "Ribo"]
   colnames(mrna) <- colnames(rpf) <- Samples
+  rownames(mrna) <- rownames(rpf) <- 1:nrow(counts)
 
 
   list(rpf = rpf, mrna = mrna, condition = as.character(Conditions),

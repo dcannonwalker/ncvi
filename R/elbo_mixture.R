@@ -1,6 +1,8 @@
 elbo_extra_mixture <- function(data, pars, priors = NULL) {
 
+  problem_index <- pars$problem_index
   phi <- pars$phi
+  if(length(problem_index) > 0) phi <- phi[-problem_index]
   M <- pars$theta$M
   R <- pars$theta$R
   Tau <- pars$theta$Tau
@@ -48,6 +50,7 @@ elbo_extra_mixture <- function(data, pars, priors = NULL) {
 ## replacement of
 elbo_i_mixture <- function(data, pars) {
 
+  if(is.null(data) | is.null(pars)) return(0)
   y <- data$y
   C <- data$C
   P <- data$P
@@ -92,8 +95,11 @@ contribution_pi_i <- function(pi, pi0) {
 elbo_mixture <- function(data, pars, old_elbo = NULL, priors = NULL) {
 
   # exclude problem phi_i
-  pars$phi <- pars$phi[which(sapply(pars$phi, function(p) length(p) > 1))]
-  data$G <- length(pars$phi)
+  problem_index <- pars$problem_index
+  index <- seq(1, data$G)
+  if(length(problem_index) > 0) {
+    index <- index[-problem_index]
+  }
 
   phi <- pars$phi
   theta <- pars$theta
@@ -103,7 +109,7 @@ elbo_mixture <- function(data, pars, old_elbo = NULL, priors = NULL) {
   G <- data$G
   P <- data$P
   pars_list <- list()
-  for (i in seq(1, length(data$y))) {
+  for (i in index) {
     pars_list[[i]] <- list(data = list(y = data$y[[i]], C = C, P = P),
                            pars = list(phi = phi[[i]],
                                        pi = pi[[i]],
