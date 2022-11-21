@@ -1,7 +1,7 @@
 #' Expects samples to be organized as Ribo (ctrl, trt), RNA (ctrl, trt)
-prep_bayseq <- function(data_edgeR) {
-  N <- nrow(data_edgeR$design)
-  counts <- as.matrix(data_edgeR$counts)
+prep_bayseq <- function(other_data) {
+  N <- nrow(other_data$design)
+  counts <- as.matrix(other_data$counts)
   dim = c(nrow(counts), N / 2, 2)
   replicates = rep(c(1, 2), N / 4)
   groups = list(NDE = rep(1, N / 2),

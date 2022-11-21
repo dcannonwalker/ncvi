@@ -1,10 +1,10 @@
 #' Function to prepare the counts table and annotations
 #' required by `DESeq2`
-#' @param data_edgeR List, as produced by `sim_data_mixture()`
+#' @param other_data List, as produced by `sim_data_mixture()`
 #' @return A list with `counts` and `experiment`
-prep_deseq <- function(data_edgeR) {
-  counts <- data_edgeR$counts
-  design <- data_edgeR$design
+prep_deseq <- function(other_data) {
+  counts <- other_data$counts
+  design <- other_data$design
   N <- nrow(design)
   Data_Type <- factor(design[, 'preparation'],
                       labels = c("Ribo", "RNA"))

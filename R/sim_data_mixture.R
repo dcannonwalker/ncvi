@@ -268,49 +268,12 @@ sim_data_mixture <- function(settings) {
     theta = init_theta,
     pi = init_pi
   )
-  X_stan = kronecker(rep(1, G), X)
-  Z_stan = NULL
-  if (U != 0) Z_stan = kronecker(rep(1, G), Z)
-  group <- rep(1:G, each = N)
-  data_stan <- list(N = N,
-                    G = G,
-                    P = P,
-                    U = U,
-                    y = y_vector,
-                    group = group,
-                    X = X_stan,
-                    Z = Z_stan,
-                    sigB = sqrt(1/precision_beta),
-                    sigu = sqrt(1/precision_u),
-                    sig = sqrt(1/precision_mu0))
 
-  data_jags <- list(N = N,
-                    G = G,
-                    y = y_vector,
-                    X = X_stan,
-                    Z = Z_stan,
-                    group = group,
-                    precision_phi_mat = diag(c(rep(precision_beta, P),
-                                               rep(precision_u, U))),
-                    precision_0 = diag(rep(precision_mu0, P)),
-                    mu_0 = rep(0, P))
-  data_jagsM <- list(N = N,
-                     G = G,
-                     y = y_vector,
-                     X = X_stan,
-                     Z = Z_stan,
-                     group = group,
-                     a_beta = priors$a_beta,
-                     a_u = priors$a_u,
-                     b_beta = priors$b_beta,
-                     b_u = priors$b_u,
-                     pi0 = pi0,
-                     Ip = diag(P),
-                     Iu = diag(U),
-                     P = P,
-                     U = U,
-                     precision_0 = diag(rep(precision_mu0, P)),
-                     mu_0 = rep(0, P))
+  group <- rep(1:G, each = N)
+
+
+
+
 
   preparation <- rep(c(0, 1), each = N / 2)
   treatment <- rep(rep(c(0, 1), each = N / 4), 2)
@@ -319,14 +282,12 @@ sim_data_mixture <- function(settings) {
                            sample)
   design <- design[, c(1:(3 + N / 2 - 2), ncol(design))]
   y_df <- y |> list2DF() |> data.table::transpose()
-  data_edgeR <- list(counts = y_df,
+  other_data <- list(counts = y_df,
                      group = treatment,
                      design = design)
 
-  list(data = data_ncvi, init = init_ncvi, data_stan = data_stan,
-       data_jags = data_jags,
-       data_jagsM = data_jagsM,
-       data_edgeR = data_edgeR,
+  list(data = data_ncvi, init = init_ncvi,
+       other_data = other_data,
        seed = seed,
        truepars = truepars_ncvi,
        true_init = truepars_init,

@@ -1,15 +1,15 @@
 #' Function to take the simulated data set and format it
 #' as required for `xtail`
 #'
-#' @param data_edgeR output element of `sim_data_mixture()`
+#' @param other_data output element of `sim_data_mixture()`
 #' @return list with RPF and mRNA data frames and
 #' vector of treatment conditions
-prep_xtail <- function(data_edgeR, use_normed = FALSE) {
+prep_xtail <- function(other_data, use_normed = FALSE) {
 
 
-  counts <- data_edgeR$counts
-  if(use_normed) counts <- data_edgeR$norm_counts
-  design <- data_edgeR$design
+  counts <- other_data$counts
+  if(use_normed) counts <- other_data$norm_counts
+  design <- other_data$design
   N <- nrow(design)
   Data_Type <- factor(design[, 'preparation'],
                       labels = c("Ribo", "RNA"))

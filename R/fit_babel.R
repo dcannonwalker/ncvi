@@ -1,9 +1,9 @@
 #' Function to prepare data as required by `babel`
-#' @param data_edgeR
+#' @param other_data
 #' @return A list with `ribo`, `rna`, and `group`
-prep_babel <- function(data_edgeR) {
-  counts <- data_edgeR$counts
-  design <- data_edgeR$design
+prep_babel <- function(other_data) {
+  counts <- other_data$counts
+  design <- other_data$design
   N <- nrow(design)
   Data_Type <- factor(design[, 'preparation'],
                       labels = c("Ribo", "RNA"))
