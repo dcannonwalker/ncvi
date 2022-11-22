@@ -291,6 +291,7 @@ sim_data_mixture <- function(settings) {
        seed = seed,
        truepars = truepars_ncvi,
        true_init = truepars_init,
+       D = D,
        priors = priors,
        adjust = settings$adjust)
 }
