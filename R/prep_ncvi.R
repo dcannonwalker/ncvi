@@ -8,9 +8,7 @@
 #' @param Z Random effects design matrix
 #'
 #' @export
-prep_ncvi <- function(counts, S, X, Z) {
-
-  if(missing(S)) S <- rep(1, ncol(counts) - 1)
+prep_ncvi <- function(counts, S, X, Z, calc_S = FALSE) {
   P <- ncol(X)
   U <- ncol(Z)
   y <- list()
@@ -21,13 +19,14 @@ prep_ncvi <- function(counts, S, X, Z) {
                C = cbind(X, Z), P = P, U = U)
 
   # Incorporate or calculate normalization factors
-  if(missing(S)) {
+  if(calc_S){
     edger_list <- edgeR::DGEList(counts = counts[, 2:(N + 1)],
                                  group = group)
     edger_list <- edgeR::calcNormFactors(edger_list)
-    S <- edger_list$samples$norm.factors
+    S <- -log(edger_list$samples$norm.factors * edger_list$samples$lib.size)
   }
-  data$S <- -log(S)
+  else if (missing(S)) S <- 0
+  data$S <- S
   # * generate inits ----
   beta <- list()
   for (i in seq(1, length(y))) {
