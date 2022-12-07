@@ -4,7 +4,8 @@
 #' @param other_data output element of `sim_data_mixture()`
 #' @return list with RPF and mRNA data frames and
 #' vector of treatment conditions
-prep_xtail <- function(other_data, use_normed = FALSE) {
+prep_xtail <- function(other_data, use_normed = FALSE,
+                       spec_Replicates) {
 
 
   counts <- other_data$counts
@@ -15,10 +16,11 @@ prep_xtail <- function(other_data, use_normed = FALSE) {
                       labels = c("Ribo", "RNA"))
   Conditions <- factor(design[, 'treatment'],
                        labels = c("Control", "Treatment"))[1:(N / 2)]
-  Replicates <- rep(c(1:(N / 4)), 2)
+  if(!missing(spec_Replicates)) Replicates <- spec_Replicates
+  else Replicates <- rep(c(1:(N / 4)), 2)
   Samples  <- paste(Conditions, Replicates, sep = "")
-  mrna <- counts[, Data_Type == "RNA"]
-  rpf <- counts[, Data_Type == "Ribo"]
+  mrna <- as.matrix(counts[, Data_Type == "RNA"])
+  rpf <- as.matrix(counts[, Data_Type == "Ribo"])
   colnames(mrna) <- colnames(rpf) <- Samples
   rownames(mrna) <- rownames(rpf) <- 1:nrow(counts)
 

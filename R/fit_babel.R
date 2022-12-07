@@ -1,7 +1,7 @@
 #' Function to prepare data as required by `babel`
 #' @param other_data
 #' @return A list with `ribo`, `rna`, and `group`
-prep_babel <- function(other_data) {
+prep_babel <- function(other_data, spec_Replicates) {
   counts <- other_data$counts
   design <- other_data$design
   N <- nrow(design)
@@ -9,7 +9,8 @@ prep_babel <- function(other_data) {
                       labels = c("Ribo", "RNA"))
   Conditions <- factor(design[, 'treatment'],
                        labels = c("Control", "Treatment"))[1:(N / 2)]
-  Replicates <- rep(c(1:(N / 4)), 2)
+  if(!missing(spec_Replicates)) Replicates <- spec_Replicates
+  else Replicates <- rep(c(1:(N / 4)), 2)
   Samples  <- paste(Conditions, Replicates, sep = "")
   rna <- counts[, Data_Type == "RNA"]
   ribo <- counts[, Data_Type == "Ribo"]

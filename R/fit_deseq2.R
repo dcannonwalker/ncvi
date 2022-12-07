@@ -2,7 +2,7 @@
 #' required by `DESeq2`
 #' @param other_data List, as produced by `sim_data_mixture()`
 #' @return A list with `counts` and `experiment`
-prep_deseq <- function(other_data) {
+prep_deseq <- function(other_data, spec_Replicates) {
   counts <- other_data$counts
   design <- other_data$design
   N <- nrow(design)
@@ -10,7 +10,8 @@ prep_deseq <- function(other_data) {
                       labels = c("Ribo", "RNA"))
   Conditions <- factor(design[, 'treatment'],
                        labels = c("Control", "Treatment"))
-  Replicates <- rep(1:(N / 4), 4)
+  if(!missing(spec_Replicates)) Replicates <- spec_Replicates
+  else Replicates <- rep(c(1:(N / 4)), 4)
   Samples  <- paste(Data_Type, Conditions, Replicates, sep = "")
   Bio_Replicate2 <- factor(c(0, 1, rep(0, N / 2 - 2), 0, 1, rep(0, N / 2 - 2)))
   Bio_Replicates <- data.frame(Bio_Replicate2)
